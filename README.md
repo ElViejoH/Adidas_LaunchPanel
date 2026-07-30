@@ -317,3 +317,5 @@ docker compose --env-file .env.staging -f compose.staging.yml down
 En cada pull request y push a `main`, GitHub Actions ejecuta pruebas, lint, build y E2E. Después de un push válido a `main`, publica `ghcr.io/elviejoh/adidas-launch-panel:staging`. Si el repositorio tiene configurado el secreto `STAGING_DEPLOY_HOOK_URL`, también solicita el despliegue al proveedor conectado.
 
 Consulta [la guía de despliegue](docs/deployment.md) para configurar un host remoto, persistencia, variables y rollback.
+
+Para crear el staging recomendado directamente en Render, usa el [Blueprint del proyecto](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FElViejoH%2FAdidas_LaunchPanel). La configuración utiliza un servicio `starter` con un disco persistente de 1 GB.

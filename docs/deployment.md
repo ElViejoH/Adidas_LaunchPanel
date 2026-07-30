@@ -62,6 +62,25 @@ GitHub usa su token temporal para publicar en GHCR; no requiere una contraseña 
 
 ## Conectar un staging remoto
 
+### Render Blueprint
+
+`render.yaml` declara el staging recomendado:
+
+- Servicio Docker `starter` en Virginia.
+- Disco persistente de 1 GB montado en `/data`.
+- Secreto JWT generado por Render.
+- Health check en `/api/health`.
+- Seed ejecutado una sola vez después del primer despliegue.
+- Despliegues posteriores únicamente cuando los checks de GitHub hayan pasado.
+
+Para crear el servicio, abre el enlace de Blueprint, autoriza a Render para leer el repositorio privado y confirma el servicio y el disco mostrados:
+
+`https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FElViejoH%2FAdidas_LaunchPanel`
+
+Render construye el mismo `Dockerfile` que CI. No es necesario agregar manualmente `JWT_SECRET` ni ejecutar la semilla.
+
+### Proveedor alternativo
+
 1. Crea un servicio desde `ghcr.io/elviejoh/adidas-launch-panel:staging`.
 2. Configura el puerto, volumen, health check y variables del contrato anterior.
 3. Si el proveedor ofrece un deploy hook, guárdalo en GitHub como el secreto de repositorio `STAGING_DEPLOY_HOOK_URL`.
