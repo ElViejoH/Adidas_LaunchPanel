@@ -212,6 +212,7 @@ En Windows PowerShell:
 cd frontend
 npm install
 Copy-Item .env.example .env
+npx playwright install chromium
 npm run dev
 ```
 
@@ -221,6 +222,7 @@ En macOS o Linux:
 cd frontend
 npm install
 cp .env.example .env
+npx playwright install chromium
 npm run dev
 ```
 
@@ -264,6 +266,10 @@ Desde `frontend/`:
 | `npm run dev` | Inicia Vite en modo desarrollo. |
 | `npm run build` | Genera la versión de producción. |
 | `npm run lint` | Ejecuta las reglas estáticas de ESLint. |
+| `npm test` | Ejecuta las pruebas rápidas de componentes y permisos con Vitest. |
+| `npm run test:e2e` | Ejecuta el flujo crítico completo en Chromium con Playwright y una base aislada. |
+| `npm run test:e2e:ui` | Abre la interfaz interactiva de Playwright para depuración local. |
+| `npm run test:all` | Ejecuta en secuencia las pruebas rápidas y las pruebas E2E. |
 | `npm run preview` | Sirve localmente el build generado. |
 
 Para verificar el entregable completo después de instalar dependencias:
@@ -273,8 +279,14 @@ cd backend
 npm test
 cd ..\frontend
 npm run lint
+npm test
 npm run build
+npm run test:e2e
 ```
+
+Las pruebas E2E levantan automáticamente la API en el puerto `4100` y Vite en el
+puerto `4173`. Utilizan `backend/test/.tmp/e2e.db`, que se recrea para cada corrida,
+por lo que nunca modifican la base local `backend/prisma/dev.db`.
 
 ## Notas de seguridad
 
