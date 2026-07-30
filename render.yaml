@@ -10,7 +10,6 @@ services:
     dockerContext: .
     autoDeployTrigger: checksPass
     healthCheckPath: /api/health
-    maxShutdownDelaySeconds: 30
     initialDeployHook: npm run db:seed
     envVars:
       - key: NODE_ENV
