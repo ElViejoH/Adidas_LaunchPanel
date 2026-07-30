@@ -24,7 +24,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useDebounce } from '../hooks/useDebounce'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useLaunches } from '../hooks/useLaunches'
-import { STATUS_CONFIG, STATUS_ORDER, USER_ROLES } from '../utils/constants'
+import { FILTERABLE_STATUSES, STATUS_CONFIG, USER_ROLES } from '../utils/constants'
 import { formatLaunchDate, toDate } from '../utils/date'
 
 const weekdays = [
@@ -150,7 +150,7 @@ export function CalendarPage() {
                 className="min-h-10 w-full appearance-none rounded-lg border border-zinc-300 bg-white py-2 pl-3 pr-9 text-sm text-zinc-950 outline-none focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10"
               >
                 <option value="">Todos los estados</option>
-                {STATUS_ORDER.map((value) => <option key={value} value={value}>{STATUS_CONFIG[value].label}</option>)}
+                {FILTERABLE_STATUSES.map((value) => <option key={value} value={value}>{STATUS_CONFIG[value].label}</option>)}
               </select>
               <CaretDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" size={15} weight="bold" />
             </span>

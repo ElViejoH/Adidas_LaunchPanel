@@ -15,8 +15,10 @@ enum Role {
 enum LaunchStatus {
   DRAFT
   IN_REVIEW
+  CHANGES_REQUESTED
   APPROVED
   PUBLISHED
+  REJECTED
 }
 
 model User {

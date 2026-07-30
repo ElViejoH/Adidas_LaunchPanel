@@ -5,7 +5,7 @@ import {
   canDeleteLaunch,
   canEditLaunch,
   canManageAssets,
-  getAllowedNextStatus,
+  getAllowedStatusTransitions,
   isLaunchOwner,
 } from './permissions'
 
@@ -38,11 +38,29 @@ describe('permisos de lanzamientos', () => {
     const review = { creatorId: creator.id, status: LAUNCH_STATUSES.IN_REVIEW }
     const approved = { creatorId: creator.id, status: LAUNCH_STATUSES.APPROVED }
     const published = { creatorId: creator.id, status: LAUNCH_STATUSES.PUBLISHED }
+    const changesRequested = {
+      creatorId: creator.id,
+      status: LAUNCH_STATUSES.CHANGES_REQUESTED,
+    }
+    const rejected = { creatorId: creator.id, status: LAUNCH_STATUSES.REJECTED }
 
-    expect(getAllowedNextStatus(creator, ownedDraft)).toBe(LAUNCH_STATUSES.IN_REVIEW)
-    expect(getAllowedNextStatus(approver, ownedDraft)).toBeNull()
-    expect(getAllowedNextStatus(approver, review)).toBe(LAUNCH_STATUSES.APPROVED)
-    expect(getAllowedNextStatus(approver, approved)).toBe(LAUNCH_STATUSES.PUBLISHED)
-    expect(getAllowedNextStatus(approver, published)).toBeNull()
+    expect(getAllowedStatusTransitions(creator, ownedDraft)).toEqual([
+      LAUNCH_STATUSES.IN_REVIEW,
+    ])
+    expect(getAllowedStatusTransitions(approver, ownedDraft)).toEqual([])
+    expect(getAllowedStatusTransitions(approver, approved)).toEqual([
+      LAUNCH_STATUSES.PUBLISHED,
+    ])
+    expect(getAllowedStatusTransitions(approver, published)).toEqual([])
+    expect(getAllowedStatusTransitions(approver, review)).toEqual([
+      LAUNCH_STATUSES.APPROVED,
+      LAUNCH_STATUSES.CHANGES_REQUESTED,
+      LAUNCH_STATUSES.REJECTED,
+    ])
+    expect(getAllowedStatusTransitions(creator, changesRequested)).toEqual([
+      LAUNCH_STATUSES.DRAFT,
+    ])
+    expect(getAllowedStatusTransitions(otherCreator, changesRequested)).toEqual([])
+    expect(getAllowedStatusTransitions(approver, rejected)).toEqual([])
   })
 })

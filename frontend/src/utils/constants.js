@@ -11,8 +11,10 @@ export const ROLE_LABELS = {
 export const LAUNCH_STATUSES = {
   DRAFT: 'DRAFT',
   IN_REVIEW: 'IN_REVIEW',
+  CHANGES_REQUESTED: 'CHANGES_REQUESTED',
   APPROVED: 'APPROVED',
   PUBLISHED: 'PUBLISHED',
+  REJECTED: 'REJECTED',
 }
 
 export const STATUS_ORDER = [
@@ -20,6 +22,15 @@ export const STATUS_ORDER = [
   LAUNCH_STATUSES.IN_REVIEW,
   LAUNCH_STATUSES.APPROVED,
   LAUNCH_STATUSES.PUBLISHED,
+]
+
+export const FILTERABLE_STATUSES = [
+  LAUNCH_STATUSES.DRAFT,
+  LAUNCH_STATUSES.IN_REVIEW,
+  LAUNCH_STATUSES.CHANGES_REQUESTED,
+  LAUNCH_STATUSES.APPROVED,
+  LAUNCH_STATUSES.PUBLISHED,
+  LAUNCH_STATUSES.REJECTED,
 ]
 
 export const STATUS_CONFIG = {
@@ -33,6 +44,11 @@ export const STATUS_CONFIG = {
     shortLabel: 'Revisión',
     className: 'border-zinc-400 bg-zinc-200 text-zinc-900',
   },
+  [LAUNCH_STATUSES.CHANGES_REQUESTED]: {
+    label: 'Cambios solicitados',
+    shortLabel: 'Cambios',
+    className: 'border-amber-400 bg-amber-50 text-amber-900',
+  },
   [LAUNCH_STATUSES.APPROVED]: {
     label: 'Aprobado',
     shortLabel: 'Aprobado',
@@ -42,6 +58,11 @@ export const STATUS_CONFIG = {
     label: 'Publicado',
     shortLabel: 'Publicado',
     className: 'border-zinc-900 bg-zinc-950 text-zinc-50',
+  },
+  [LAUNCH_STATUSES.REJECTED]: {
+    label: 'Rechazado',
+    shortLabel: 'Rechazado',
+    className: 'border-red-300 bg-red-50 text-red-800',
   },
 }
 

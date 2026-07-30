@@ -30,7 +30,7 @@ import {
   canDeleteLaunch,
   canEditLaunch,
   canManageAssets,
-  getAllowedNextStatus,
+  getAllowedStatusTransitions,
 } from '../utils/permissions'
 
 const assetIcons = {
@@ -41,10 +41,37 @@ const assetIcons = {
   OTHER: File,
 }
 
-const transitionLabels = {
-  [LAUNCH_STATUSES.IN_REVIEW]: 'Enviar a revisión',
-  [LAUNCH_STATUSES.APPROVED]: 'Aprobar lanzamiento',
-  [LAUNCH_STATUSES.PUBLISHED]: 'Publicar lanzamiento',
+const transitionConfig = {
+  [LAUNCH_STATUSES.DRAFT]: {
+    label: 'Reabrir como borrador',
+    description: 'El lanzamiento volverá a borrador para que puedas aplicar los cambios solicitados.',
+    variant: 'secondary',
+  },
+  [LAUNCH_STATUSES.IN_REVIEW]: {
+    label: 'Enviar a revisión',
+    description: 'El lanzamiento quedará disponible para decisión del equipo aprobador.',
+  },
+  [LAUNCH_STATUSES.APPROVED]: {
+    label: 'Aprobar lanzamiento',
+    description: 'El lanzamiento quedará aprobado y listo para publicación.',
+  },
+  [LAUNCH_STATUSES.PUBLISHED]: {
+    label: 'Publicar lanzamiento',
+    description: 'El lanzamiento se marcará como publicado.',
+  },
+  [LAUNCH_STATUSES.CHANGES_REQUESTED]: {
+    label: 'Solicitar cambios',
+    description: 'El creador recibirá tus observaciones y podrá reabrir el lanzamiento como borrador.',
+    variant: 'dangerSecondary',
+    commentRequired: true,
+  },
+  [LAUNCH_STATUSES.REJECTED]: {
+    label: 'Rechazar lanzamiento',
+    description: 'El lanzamiento se cerrará como rechazado y no podrá avanzar nuevamente.',
+    variant: 'danger',
+    tone: 'danger',
+    commentRequired: true,
+  },
 }
 
 export function LaunchDetailPage() {
@@ -56,10 +83,11 @@ export function LaunchDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [reloadKey, setReloadKey] = useState(0)
-  const [statusModalOpen, setStatusModalOpen] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [assetToDelete, setAssetToDelete] = useState(null)
   const [comment, setComment] = useState('')
+  const [commentError, setCommentError] = useState('')
   const [isMutating, setIsMutating] = useState(false)
   const [actionError, setActionError] = useState('')
   const [assetForm, setAssetForm] = useState({ name: '', type: 'IMAGE', url: '' })
@@ -95,28 +123,39 @@ export function LaunchDetailPage() {
       edit: canEditLaunch(user, launch),
       remove: canDeleteLaunch(user, launch),
       assets: canManageAssets(user, launch),
-      nextStatus: getAllowedNextStatus(user, launch),
+      transitions: getAllowedStatusTransitions(user, launch),
     }),
     [launch, user],
   )
 
   const refresh = () => setReloadKey((key) => key + 1)
 
+  const activeTransition = selectedStatus ? transitionConfig[selectedStatus] : null
+
+  const closeStatusModal = () => {
+    setSelectedStatus(null)
+    setComment('')
+    setCommentError('')
+  }
+
   const handleStatusChange = async () => {
-    if (!permissions.nextStatus) return
+    if (!selectedStatus || !permissions.transitions.includes(selectedStatus)) return
+    if (activeTransition?.commentRequired && !comment.trim()) {
+      setCommentError('Explica el motivo para que el creador pueda actuar sobre esta decisión.')
+      return
+    }
     setIsMutating(true)
     setActionError('')
     try {
       await launchService.changeStatus(id, {
-        status: permissions.nextStatus,
+        status: selectedStatus,
         comment: comment.trim() || undefined,
       })
-      setStatusModalOpen(false)
-      setComment('')
+      closeStatusModal()
       refresh()
     } catch (requestError) {
       setActionError(requestError.message)
-      setStatusModalOpen(false)
+      closeStatusModal()
     } finally {
       setIsMutating(false)
     }
@@ -219,12 +258,20 @@ export function LaunchDetailPage() {
               Eliminar
             </Button>
           )}
-          {permissions.nextStatus && (
-            <Button size="sm" onClick={() => setStatusModalOpen(true)}>
-              {transitionLabels[permissions.nextStatus]}
-              <ArrowRight size={16} weight="bold" aria-hidden="true" />
-            </Button>
-          )}
+          {permissions.transitions.map((status) => {
+            const config = transitionConfig[status]
+            return (
+              <Button
+                key={status}
+                variant={config?.variant}
+                size="sm"
+                onClick={() => setSelectedStatus(status)}
+              >
+                {config?.label || 'Cambiar estado'}
+                <ArrowRight size={16} weight="bold" aria-hidden="true" />
+              </Button>
+            )
+          })}
         </div>
       </div>
 
@@ -402,23 +449,36 @@ export function LaunchDetailPage() {
       </div>
 
       <ConfirmModal
-        isOpen={statusModalOpen}
-        title={transitionLabels[permissions.nextStatus] || 'Cambiar estado'}
-        description={`El lanzamiento pasará a ${STATUS_CONFIG[permissions.nextStatus]?.label || 'su siguiente estado'}. Este cambio quedará registrado en el historial.`}
-        confirmLabel={transitionLabels[permissions.nextStatus] || 'Confirmar cambio'}
+        isOpen={Boolean(selectedStatus)}
+        title={activeTransition?.label || 'Cambiar estado'}
+        description={`${activeTransition?.description || `El lanzamiento pasará a ${STATUS_CONFIG[selectedStatus]?.label || 'otro estado'}.`} Este cambio quedará registrado en el historial.`}
+        confirmLabel={activeTransition?.label || 'Confirmar cambio'}
         onConfirm={handleStatusChange}
-        onClose={() => setStatusModalOpen(false)}
+        onClose={closeStatusModal}
         isLoading={isMutating}
+        tone={activeTransition?.tone}
       >
         <label className="block">
-          <span className="mb-2 block text-sm font-black text-zinc-800">Comentario opcional</span>
+          <span className="mb-2 block text-sm font-black text-zinc-800">
+            {activeTransition?.commentRequired ? 'Comentario obligatorio' : 'Comentario opcional'}
+          </span>
           <textarea
             value={comment}
-            onChange={(event) => setComment(event.target.value)}
+            onChange={(event) => {
+              setComment(event.target.value)
+              setCommentError('')
+            }}
             rows={3}
-            placeholder="Agrega contexto para el equipo."
-            className="w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm leading-6 text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10"
+            placeholder={activeTransition?.commentRequired ? 'Explica los cambios necesarios o el motivo del rechazo.' : 'Agrega contexto para el equipo.'}
+            aria-invalid={Boolean(commentError)}
+            aria-describedby={commentError ? 'status-comment-error' : undefined}
+            className="w-full resize-y rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm leading-6 text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10 aria-[invalid=true]:border-red-600"
           />
+          {commentError && (
+            <p id="status-comment-error" className="mt-1.5 text-xs font-semibold text-red-700" role="alert">
+              {commentError}
+            </p>
+          )}
         </label>
       </ConfirmModal>
 

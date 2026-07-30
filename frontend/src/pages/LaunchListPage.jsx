@@ -16,7 +16,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useDebounce } from '../hooks/useDebounce'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useLaunches } from '../hooks/useLaunches'
-import { STATUS_CONFIG, STATUS_ORDER, USER_ROLES } from '../utils/constants'
+import { FILTERABLE_STATUSES, STATUS_CONFIG, USER_ROLES } from '../utils/constants'
 
 export function LaunchListPage() {
   useDocumentTitle('Lanzamientos')
@@ -132,7 +132,7 @@ export function LaunchListPage() {
                 className="min-h-10 w-full appearance-none rounded-lg border border-zinc-300 bg-white py-2 pl-3 pr-9 text-sm text-zinc-950 outline-none focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10"
               >
                 <option value="">Todos los estados</option>
-                {STATUS_ORDER.map((value) => (
+                {FILTERABLE_STATUSES.map((value) => (
                   <option key={value} value={value}>{STATUS_CONFIG[value].label}</option>
                 ))}
               </select>
@@ -169,7 +169,7 @@ export function LaunchListPage() {
               className="min-h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-950 outline-none focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10"
             >
               <option value="">Todos los estados</option>
-              {STATUS_ORDER.map((value) => (
+              {FILTERABLE_STATUSES.map((value) => (
                 <option key={value} value={value}>{STATUS_CONFIG[value].label}</option>
               ))}
             </select>

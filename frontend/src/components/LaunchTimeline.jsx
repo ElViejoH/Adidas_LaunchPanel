@@ -1,10 +1,15 @@
 import { Check, ClockCounterClockwise } from '@phosphor-icons/react'
-import { STATUS_CONFIG, STATUS_ORDER } from '../utils/constants'
+import { LAUNCH_STATUSES, STATUS_CONFIG, STATUS_ORDER } from '../utils/constants'
 import { formatDateTime } from '../utils/date'
 import { StatusBadge } from './StatusBadge'
 
 export function LaunchTimeline({ currentStatus, history = [] }) {
-  const currentIndex = STATUS_ORDER.indexOf(currentStatus)
+  const reviewOutcome = [
+    LAUNCH_STATUSES.CHANGES_REQUESTED,
+    LAUNCH_STATUSES.REJECTED,
+  ].includes(currentStatus) ? currentStatus : null
+  const progressStatus = reviewOutcome ? LAUNCH_STATUSES.IN_REVIEW : currentStatus
+  const currentIndex = STATUS_ORDER.indexOf(progressStatus)
   const sortedHistory = [...history].sort(
     (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
   )
@@ -37,6 +42,15 @@ export function LaunchTimeline({ currentStatus, history = [] }) {
           )
         })}
       </ol>
+
+      {reviewOutcome && (
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-3">
+          <span className="text-xs font-black uppercase tracking-[0.08em] text-zinc-500">
+            Resultado de revisión
+          </span>
+          <StatusBadge status={reviewOutcome} />
+        </div>
+      )}
 
       <div className="mt-7 border-t border-zinc-200 pt-5">
         <h3 className="text-sm font-black text-zinc-950">Historial de cambios</h3>

@@ -18,7 +18,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useLaunches } from '../hooks/useLaunches'
 import { LAUNCH_STATUSES, USER_ROLES } from '../utils/constants'
 import { formatLaunchDate, startOfToday, toDate } from '../utils/date'
-import { canEditLaunch } from '../utils/permissions'
+import { getAllowedStatusTransitions } from '../utils/permissions'
 
 export function DashboardPage() {
   useDocumentTitle('Resumen')
@@ -36,11 +36,7 @@ export function DashboardPage() {
       .slice(0, 4)
 
     const reviewQueue = launches
-      .filter((launch) =>
-        user?.role === USER_ROLES.APPROVER
-          ? [LAUNCH_STATUSES.IN_REVIEW, LAUNCH_STATUSES.APPROVED].includes(launch.status)
-          : canEditLaunch(user, launch),
-      )
+      .filter((launch) => getAllowedStatusTransitions(user, launch).length > 0)
       .slice(0, 5)
 
     return {
@@ -147,7 +143,7 @@ export function DashboardPage() {
                     {user?.role === USER_ROLES.APPROVER ? 'Cola de aprobación' : 'Borradores abiertos'}
                   </h2>
                   <p className="mt-1 text-xs text-zinc-500">
-                    {user?.role === USER_ROLES.APPROVER ? 'Elementos que requieren decisión.' : 'Trabajo que aún puedes editar.'}
+                    {user?.role === USER_ROLES.APPROVER ? 'Elementos que requieren decisión.' : 'Borradores y solicitudes que requieren acción.'}
                   </p>
                 </div>
                 <span className="text-2xl font-black tracking-[-0.04em] text-zinc-950">{dashboardData.reviewQueue.length}</span>

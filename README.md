@@ -5,7 +5,7 @@ Aplicación web interna para organizar lanzamientos de producto desde su creaci�
 ## Alcance del primer entregable
 
 - CRUD de lanzamientos con búsqueda y filtros por mercado, estado y fecha.
-- Flujo controlado `DRAFT → IN_REVIEW → APPROVED → PUBLISHED`.
+- Flujo controlado con aprobación, solicitud de cambios y rechazo auditable.
 - Registro auditable de cada transición de estado.
 - Gestión de assets asociados a un lanzamiento.
 - Vistas conectadas de dashboard, lista, detalle, formulario y calendario.
@@ -112,13 +112,14 @@ Las rutas principales de la interfaz son `/login`, `/`, `/launches`, `/launches/
 | `Asset` | `id`, `launchId`, `name`, `type`, `url`, `createdAt` | Pertenece a un lanzamiento. |
 | `StatusHistory` | `id`, `launchId`, `previousStatus`, `newStatus`, `changedById`, `comment`, `createdAt` | Relaciona un lanzamiento con el usuario que realizó la transición. |
 
-Los roles válidos son `CREATOR` y `APPROVER`. Los estados válidos son `DRAFT`, `IN_REVIEW`, `APPROVED` y `PUBLISHED`.
+Los roles válidos son `CREATOR` y `APPROVER`. Los estados válidos son `DRAFT`, `IN_REVIEW`, `CHANGES_REQUESTED`, `APPROVED`, `PUBLISHED` y `REJECTED`.
 
 ## Estados y permisos
 
 ```text
-CREATOR                    APPROVER
 DRAFT ──enviar revisión──> IN_REVIEW ──aprobar──> APPROVED ──publicar──> PUBLISHED
+                               ├──solicitar cambios──> CHANGES_REQUESTED ──reabrir──> DRAFT
+                               └──rechazar──────────> REJECTED
 ```
 
 | Acción | CREATOR | APPROVER |
@@ -128,10 +129,13 @@ DRAFT ──enviar revisión──> IN_REVIEW ──aprobar──> APPROVED ─�
 | Editar un lanzamiento | Solo uno propio en `DRAFT` | No |
 | Eliminar un lanzamiento | Solo uno propio en `DRAFT` | No |
 | Enviar a revisión | `DRAFT → IN_REVIEW` | No |
+| Solicitar cambios | No | `IN_REVIEW → CHANGES_REQUESTED`, con comentario obligatorio |
+| Reabrir para corregir | `CHANGES_REQUESTED → DRAFT`, solo el propietario | No |
+| Rechazar | No | `IN_REVIEW → REJECTED`, con comentario obligatorio |
 | Aprobar | No | `IN_REVIEW → APPROVED` |
 | Publicar | No | `APPROVED → PUBLISHED` |
 
-No se permiten retrocesos ni saltos entre estados. Cada transición se ejecuta de forma transaccional y crea un registro en `StatusHistory` con el usuario responsable y un comentario opcional. La interfaz oculta las acciones no disponibles, pero la API vuelve a validar todos los permisos.
+No se permiten saltos ni retrocesos fuera del grafo definido. `REJECTED` y `PUBLISHED` son terminales. Cada transición se ejecuta de forma transaccional y crea un registro en `StatusHistory` con el usuario responsable; el comentario es obligatorio para solicitar cambios o rechazar y opcional en los demás movimientos. La interfaz oculta las acciones no disponibles, pero la API vuelve a validar todos los permisos.
 
 ## API REST
 
@@ -149,7 +153,7 @@ Authorization: Bearer <token>
 | `POST` | `/api/launches` | Crea un lanzamiento en `DRAFT`. | CREATOR |
 | `PUT` | `/api/launches/:id` | Edita un lanzamiento propio en `DRAFT`. | CREATOR |
 | `DELETE` | `/api/launches/:id` | Elimina un lanzamiento propio en `DRAFT`. | CREATOR |
-| `PATCH` | `/api/launches/:id/status` | Ejecuta la siguiente transición válida. | Según transición |
+| `PATCH` | `/api/launches/:id/status` | Ejecuta una transición válida del grafo de estados. | Según transición |
 | `GET` | `/api/launches/:id/history` | Lista el historial cronológico de estados. | Autenticado |
 | `POST` | `/api/launches/:id/assets` | Asocia un asset al lanzamiento. | Según permisos del lanzamiento |
 | `DELETE` | `/api/assets/:id` | Elimina un asset asociado. | Según permisos del lanzamiento |

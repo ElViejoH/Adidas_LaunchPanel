@@ -12,4 +12,12 @@ describe('StatusBadge', () => {
     render(<StatusBadge status="BLOCKED" />)
     expect(screen.getByText('BLOCKED')).toBeInTheDocument()
   })
+
+  test.each([
+    ['CHANGES_REQUESTED', 'Cambios solicitados'],
+    ['REJECTED', 'Rechazado'],
+  ])('representa el resultado de revisión %s', (status, label) => {
+    render(<StatusBadge status={status} />)
+    expect(screen.getByText(label)).toBeInTheDocument()
+  })
 })

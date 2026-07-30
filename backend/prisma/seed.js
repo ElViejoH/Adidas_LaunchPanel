@@ -8,6 +8,8 @@ const SEED_LAUNCH_NAMES = [
   'Ultraboost 5 LATAM',
   'Adizero Adios Pro 4 Colombia',
   'Predator Archive Pack',
+  'Terrex Trail Refresh',
+  'Forum Low Creator Drop',
 ];
 
 const addDays = (date, days) => {
@@ -199,7 +201,65 @@ async function main() {
     },
   });
 
-  console.log('Seed completado: 2 usuarios y 4 lanzamientos de ejemplo.');
+  await prisma.launch.create({
+    data: {
+      name: SEED_LAUNCH_NAMES[4],
+      description: 'Actualización de campaña outdoor pendiente de ajustes en el key visual.',
+      market: 'LATAM',
+      launchDate: addDays(today, 63),
+      status: LaunchStatus.CHANGES_REQUESTED,
+      creatorId: creator.id,
+      statusHistory: {
+        create: [
+          {
+            previousStatus: LaunchStatus.DRAFT,
+            newStatus: LaunchStatus.IN_REVIEW,
+            changedById: creator.id,
+            comment: 'Primera propuesta lista para revisión.',
+            createdAt: twoDaysAgo,
+          },
+          {
+            previousStatus: LaunchStatus.IN_REVIEW,
+            newStatus: LaunchStatus.CHANGES_REQUESTED,
+            changedById: approver.id,
+            comment: 'Ajustar contraste del producto y claim regional.',
+            createdAt: oneDayAgo,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.launch.create({
+    data: {
+      name: SEED_LAUNCH_NAMES[5],
+      description: 'Propuesta de colaboración evaluada para el calendario Originals.',
+      market: 'Global',
+      launchDate: addDays(today, 77),
+      status: LaunchStatus.REJECTED,
+      creatorId: creator.id,
+      statusHistory: {
+        create: [
+          {
+            previousStatus: LaunchStatus.DRAFT,
+            newStatus: LaunchStatus.IN_REVIEW,
+            changedById: creator.id,
+            comment: 'Propuesta enviada al comité global.',
+            createdAt: twoDaysAgo,
+          },
+          {
+            previousStatus: LaunchStatus.IN_REVIEW,
+            newStatus: LaunchStatus.REJECTED,
+            changedById: approver.id,
+            comment: 'La propuesta no se alinea con el calendario comercial actual.',
+            createdAt: oneDayAgo,
+          },
+        ],
+      },
+    },
+  });
+
+  console.log('Seed completado: 2 usuarios y 6 lanzamientos de ejemplo.');
 }
 
 main()

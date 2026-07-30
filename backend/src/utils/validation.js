@@ -8,8 +8,10 @@ export const USER_ROLES = Object.freeze({
 export const LAUNCH_STATUSES = Object.freeze({
   DRAFT: 'DRAFT',
   IN_REVIEW: 'IN_REVIEW',
+  CHANGES_REQUESTED: 'CHANGES_REQUESTED',
   APPROVED: 'APPROVED',
   PUBLISHED: 'PUBLISHED',
+  REJECTED: 'REJECTED',
 })
 
 export const VALID_LAUNCH_STATUSES = Object.freeze(Object.values(LAUNCH_STATUSES))

@@ -433,6 +433,91 @@ test('APPROVER no puede enviar un DRAFT a revisión', async () => {
   assert.equal(response.body.error.code, 'FORBIDDEN')
 })
 
+test('APPROVER solicita cambios con comentario y el CREATOR propietario reabre el borrador', async () => {
+  const [creatorToken, otherToken, approverToken] = await Promise.all([
+    loginAs(emails.creator),
+    loginAs(emails.otherCreator),
+    loginAs(emails.approver),
+  ])
+
+  const missingComment = await request(app)
+    .patch(`/api/launches/${fixture.inReview.id}/status`)
+    .set(bearer(approverToken))
+    .send({ status: LaunchStatus.CHANGES_REQUESTED })
+  assert.equal(missingComment.status, 400)
+  assert.equal(missingComment.body.error.code, 'COMMENT_REQUIRED')
+
+  const requested = await request(app)
+    .patch(`/api/launches/${fixture.inReview.id}/status`)
+    .set(bearer(approverToken))
+    .send({
+      status: LaunchStatus.CHANGES_REQUESTED,
+      comment: 'Ajustar el claim y reemplazar el key visual.',
+    })
+  assert.equal(requested.status, 200)
+  assert.equal(requested.body.data.status, LaunchStatus.CHANGES_REQUESTED)
+  assert.equal(
+    requested.body.data.statusHistory[0].comment,
+    'Ajustar el claim y reemplazar el key visual.',
+  )
+
+  const otherCannotReopen = await request(app)
+    .patch(`/api/launches/${fixture.inReview.id}/status`)
+    .set(bearer(otherToken))
+    .send({ status: LaunchStatus.DRAFT })
+  assert.equal(otherCannotReopen.status, 403)
+  assert.equal(otherCannotReopen.body.error.code, 'NOT_LAUNCH_OWNER')
+
+  const reopened = await request(app)
+    .patch(`/api/launches/${fixture.inReview.id}/status`)
+    .set(bearer(creatorToken))
+    .send({ status: LaunchStatus.DRAFT, comment: 'Retomo los ajustes solicitados.' })
+  assert.equal(reopened.status, 200)
+  assert.equal(reopened.body.data.status, LaunchStatus.DRAFT)
+  assert.equal(reopened.body.data.statusHistory.length, 3)
+
+  const editableAgain = await request(app)
+    .put(`/api/launches/${fixture.inReview.id}`)
+    .set(bearer(creatorToken))
+    .send({
+      name: 'Campaña corregida',
+      description: 'Descripción ajustada después del feedback.',
+      market: 'México',
+      launchDate: '2031-06-01T12:00:00.000Z',
+    })
+  assert.equal(editableAgain.status, 200)
+  assert.equal(editableAgain.body.data.name, 'Campaña corregida')
+})
+
+test('APPROVER rechaza con motivo y REJECTED queda como estado terminal', async () => {
+  const approverToken = await loginAs(emails.approver)
+
+  for (const status of [LaunchStatus.CHANGES_REQUESTED, LaunchStatus.REJECTED]) {
+    const response = await request(app)
+      .patch(`/api/launches/${fixture.inReview.id}/status`)
+      .set(bearer(approverToken))
+      .send({ status })
+    assert.equal(response.status, 400)
+    assert.equal(response.body.error.code, 'COMMENT_REQUIRED')
+  }
+
+  const rejected = await request(app)
+    .patch(`/api/launches/${fixture.inReview.id}/status`)
+    .set(bearer(approverToken))
+    .send({ status: LaunchStatus.REJECTED, comment: 'La propuesta no cumple el brief.' })
+  assert.equal(rejected.status, 200)
+  assert.equal(rejected.body.data.status, LaunchStatus.REJECTED)
+  assert.equal(rejected.body.data.statusHistory[0].comment, 'La propuesta no cumple el brief.')
+
+  const cannotResume = await request(app)
+    .patch(`/api/launches/${fixture.inReview.id}/status`)
+    .set(bearer(approverToken))
+    .send({ status: LaunchStatus.APPROVED })
+  assert.equal(cannotResume.status, 409)
+  assert.equal(cannotResume.body.error.code, 'INVALID_STATUS_TRANSITION')
+  assert.deepEqual(cannotResume.body.error.details.allowedStatuses, [])
+})
+
 test('assets solo pueden agregarse y eliminarse por el CREATOR propietario de un DRAFT', async () => {
   const [creatorToken, otherToken, approverToken] = await Promise.all([
     loginAs(emails.creator),

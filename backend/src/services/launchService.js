@@ -32,11 +32,21 @@ const launchDetailInclude = {
   },
 }
 
-const nextStatusByCurrent = Object.freeze({
-  [LAUNCH_STATUSES.DRAFT]: LAUNCH_STATUSES.IN_REVIEW,
-  [LAUNCH_STATUSES.IN_REVIEW]: LAUNCH_STATUSES.APPROVED,
-  [LAUNCH_STATUSES.APPROVED]: LAUNCH_STATUSES.PUBLISHED,
+const allowedStatusesByCurrent = Object.freeze({
+  [LAUNCH_STATUSES.DRAFT]: [LAUNCH_STATUSES.IN_REVIEW],
+  [LAUNCH_STATUSES.IN_REVIEW]: [
+    LAUNCH_STATUSES.APPROVED,
+    LAUNCH_STATUSES.CHANGES_REQUESTED,
+    LAUNCH_STATUSES.REJECTED,
+  ],
+  [LAUNCH_STATUSES.CHANGES_REQUESTED]: [LAUNCH_STATUSES.DRAFT],
+  [LAUNCH_STATUSES.APPROVED]: [LAUNCH_STATUSES.PUBLISHED],
 })
+
+const statusesRequiringComment = new Set([
+  LAUNCH_STATUSES.CHANGES_REQUESTED,
+  LAUNCH_STATUSES.REJECTED,
+])
 
 function parsePaginationValue(value, field, fallback) {
   if (value === undefined || value === null || value === '') return fallback
@@ -96,7 +106,9 @@ function assertDraft(launch) {
 }
 
 function assertTransitionPermission(actor, launch) {
-  if (launch.status === LAUNCH_STATUSES.DRAFT) {
+  if (
+    [LAUNCH_STATUSES.DRAFT, LAUNCH_STATUSES.CHANGES_REQUESTED].includes(launch.status)
+  ) {
     assertOwner(actor, launch)
     return
   }
@@ -106,7 +118,7 @@ function assertTransitionPermission(actor, launch) {
     actor?.role !== USER_ROLES.APPROVER
   ) {
     throw new AppError(
-      'Solo un usuario APPROVER puede aprobar o publicar lanzamientos.',
+      'Solo un usuario APPROVER puede decidir sobre lanzamientos en revisión o publicarlos.',
       403,
       'FORBIDDEN',
     )
@@ -322,6 +334,15 @@ export async function changeLaunchStatus(rawId, payload, actor) {
 
   const comment = optionalString(body.comment, 'comment', 500, '') || null
 
+  if (statusesRequiringComment.has(newStatus) && !comment) {
+    throw new AppError(
+      'El comentario es obligatorio al solicitar cambios o rechazar un lanzamiento.',
+      400,
+      'COMMENT_REQUIRED',
+      { field: 'comment', requestedStatus: newStatus },
+    )
+  }
+
   const updated = await prisma.$transaction(async (tx) => {
     const current = await tx.launch.findUnique({ where: { id } })
 
@@ -329,8 +350,8 @@ export async function changeLaunchStatus(rawId, payload, actor) {
       throw new AppError('El lanzamiento solicitado no existe.', 404, 'LAUNCH_NOT_FOUND')
     }
 
-    const expectedStatus = nextStatusByCurrent[current.status]
-    if (!expectedStatus || newStatus !== expectedStatus) {
+    const allowedStatuses = allowedStatusesByCurrent[current.status] ?? []
+    if (!allowedStatuses.includes(newStatus)) {
       throw new AppError(
         'La transición de estado solicitada no está permitida.',
         409,
@@ -338,7 +359,7 @@ export async function changeLaunchStatus(rawId, payload, actor) {
         {
           currentStatus: current.status,
           requestedStatus: newStatus,
-          allowedStatus: expectedStatus ?? null,
+          allowedStatuses,
         },
       )
     }
