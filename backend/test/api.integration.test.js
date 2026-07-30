@@ -198,6 +198,13 @@ test('POST /api/auth/login autentica las credenciales semilla y no expone el has
   assert.equal(failure.body.error.code, 'INVALID_CREDENTIALS')
 })
 
+test('GET /api/health comprueba la disponibilidad de la API y la base', async () => {
+  const response = await request(app).get('/api/health')
+
+  assert.equal(response.status, 200)
+  assert.deepEqual(response.body, { status: 'ok', database: 'reachable' })
+})
+
 test('las rutas de lanzamientos requieren un Bearer token válido', async () => {
   const missing = await request(app).get('/api/launches')
   assert.equal(missing.status, 401)

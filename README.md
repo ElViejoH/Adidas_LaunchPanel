@@ -295,3 +295,25 @@ por lo que nunca modifican la base local `backend/prisma/dev.db`.
 ## Notas de seguridad
 
 El JWT simple, las credenciales semilla y SQLite están pensados para esta primera etapa local. Antes de desplegar se deben usar secretos administrados, HTTPS, una política de contraseñas, rate limiting, validación más estricta de entradas y una base de datos apropiada para el entorno.
+
+## Staging reproducible
+
+El repositorio incluye una imagen única que compila React y lo sirve junto con la API Express. La base SQLite vive en un volumen persistente independiente del contenedor.
+
+Con Docker instalado, crea un archivo local de configuración y levanta staging:
+
+```powershell
+Copy-Item .env.staging.example .env.staging
+# Reemplaza STAGING_JWT_SECRET por un secreto aleatorio de al menos 32 caracteres.
+docker compose --env-file .env.staging -f compose.staging.yml up --build -d
+```
+
+La aplicación queda en `http://localhost:4000` y su comprobación de salud en `http://localhost:4000/api/health`. Para detenerla sin eliminar sus datos:
+
+```powershell
+docker compose --env-file .env.staging -f compose.staging.yml down
+```
+
+En cada pull request y push a `main`, GitHub Actions ejecuta pruebas, lint, build y E2E. Después de un push válido a `main`, publica `ghcr.io/elviejoh/adidas-launch-panel:staging`. Si el repositorio tiene configurado el secreto `STAGING_DEPLOY_HOOK_URL`, también solicita el despliegue al proveedor conectado.
+
+Consulta [la guía de despliegue](docs/deployment.md) para configurar un host remoto, persistencia, variables y rollback.

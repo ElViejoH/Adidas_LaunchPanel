@@ -1,0 +1,16 @@
+.git
+.github
+.env
+**/.env
+**/node_modules
+**/dist
+**/coverage
+**/playwright-report
+**/test-results
+**/*.db
+**/*.db-*
+**/*.log
+.vscode
+.idea
+Thumbs.db
+.DS_Store
