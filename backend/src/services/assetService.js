@@ -14,7 +14,7 @@ import {
 function assertAssetPermission(actor, launch) {
   if (actor?.role !== USER_ROLES.CREATOR) {
     throw new AppError(
-      'Solo un usuario CREATOR puede gestionar assets.',
+      'Only a CREATOR user can manage assets.',
       403,
       'FORBIDDEN',
     )
@@ -22,7 +22,7 @@ function assertAssetPermission(actor, launch) {
 
   if (launch.creatorId !== actor.id) {
     throw new AppError(
-      'Solo el creador propietario puede gestionar los assets de este lanzamiento.',
+      'Only the launch owner can manage its assets.',
       403,
       'NOT_LAUNCH_OWNER',
     )
@@ -35,7 +35,7 @@ function assertAssetPermission(actor, launch) {
 
   if (!editableStatuses.includes(launch.status)) {
     throw new AppError(
-      'Los assets solo pueden modificarse mientras el lanzamiento está en DRAFT o IN_REVIEW.',
+      'Assets can only be changed while the launch is in DRAFT or IN_REVIEW.',
       409,
       'EDITABLE_STATUS_REQUIRED',
       { currentStatus: launch.status, allowedStatuses: editableStatuses },
@@ -51,7 +51,7 @@ export async function addAsset(rawLaunchId, payload, actor) {
   const url = validateHttpUrl(body.url)
 
   if (!VALID_ASSET_TYPES.includes(type)) {
-    throw new AppError('El tipo de asset no es válido.', 400, 'INVALID_ASSET_TYPE', {
+    throw new AppError('The asset type is invalid.', 400, 'INVALID_ASSET_TYPE', {
       field: 'type',
       allowedValues: VALID_ASSET_TYPES,
     })
@@ -63,14 +63,14 @@ export async function addAsset(rawLaunchId, payload, actor) {
   })
 
   if (!launch) {
-    throw new AppError('El lanzamiento solicitado no existe.', 404, 'LAUNCH_NOT_FOUND')
+    throw new AppError('The requested launch does not exist.', 404, 'LAUNCH_NOT_FOUND')
   }
 
   assertAssetPermission(actor, launch)
 
   if (launch._count.assets >= CONTENT_LIMITS.assetsPerLaunch) {
     throw new AppError(
-      `Cada lanzamiento admite hasta ${CONTENT_LIMITS.assetsPerLaunch} assets.`,
+      `Each launch supports up to ${CONTENT_LIMITS.assetsPerLaunch} assets.`,
       409,
       'ASSET_LIMIT_REACHED',
       { maxAssets: CONTENT_LIMITS.assetsPerLaunch },

@@ -16,9 +16,9 @@ function renderRoleRoute(role) {
       <MemoryRouter initialEntries={['/users']}>
         <LocationProbe />
         <Routes>
-          <Route path="/" element={<h1>Resumen</h1>} />
+          <Route path="/" element={<h1>Overview</h1>} />
           <Route element={<RoleRoute roles={USER_ROLES.ADMIN} />}>
-            <Route path="/users" element={<h1>Usuarios y permisos</h1>} />
+            <Route path="/users" element={<h1>Users and permissions</h1>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -27,14 +27,14 @@ function renderRoleRoute(role) {
 }
 
 describe('RoleRoute', () => {
-  test('permite el acceso al rol autorizado', () => {
+  test('allows access for the authorized role', () => {
     renderRoleRoute(USER_ROLES.ADMIN)
-    expect(screen.getByRole('heading', { name: 'Usuarios y permisos' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Users and permissions' })).toBeInTheDocument()
   })
 
-  test('redirige a un usuario con otro rol', async () => {
+  test('redirects a user with a different role', async () => {
     renderRoleRoute(USER_ROLES.CREATOR)
-    expect(await screen.findByRole('heading', { name: 'Resumen' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/')
   })
 })

@@ -6,6 +6,12 @@ const creatorCredentials = {
   password: 'password123',
 }
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('adidas-launch-panel.language', 'en')
+  })
+})
+
 async function authenticateCreator(request) {
   const response = await request.post(`${apiUrl}/auth/login`, {
     data: creatorCredentials,
@@ -31,7 +37,7 @@ async function moveToReview(request, token, launchId) {
   const response = await request.patch(`${apiUrl}/launches/${launchId}/status`, {
     data: {
       newStatus: 'IN_REVIEW',
-      comment: 'Preparado para validar el filtro de estado.',
+      comment: 'Ready to validate the status filter.',
     },
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -42,41 +48,41 @@ async function moveToReview(request, token, launchId) {
 async function login(page) {
   await page.goto('/launches')
   await expect(page).toHaveURL(/\/login$/)
-  await page.getByLabel('Correo corporativo').fill(creatorCredentials.email)
-  await page.getByLabel('Contraseña').fill(creatorCredentials.password)
-  await page.getByRole('button', { name: 'Entrar al panel' }).click()
+  await page.getByLabel('Corporate email').fill(creatorCredentials.email)
+  await page.getByLabel('Password').fill(creatorCredentials.password)
+  await page.getByRole('button', { name: 'Enter the panel' }).click()
   await expect(page).toHaveURL('/')
   await page.goto('/launches')
 }
 
-test('filtra lanzamientos por texto, mercado, estado y rango de fechas', async ({
+test('filters launches by text, market, status, and date range', async ({
   page,
   request,
 }, testInfo) => {
   const runId = `${Date.now()}-${testInfo.workerIndex}`
-  const sharedPrefix = `Filtros ${runId}`
+  const sharedPrefix = `Filters ${runId}`
   const launches = {
     textMatch: {
       name: `${sharedPrefix} Solar Runner`,
-      description: 'Coincidencia exclusiva para la búsqueda E2E.',
+      description: 'Exclusive match for the E2E search.',
       market: 'Colombia',
       launchDate: '2032-03-12T12:00:00.000Z',
     },
     marketMismatch: {
-      name: `${sharedPrefix} México Rival`,
-      description: 'Control para el filtro de mercado.',
-      market: 'México',
+      name: `${sharedPrefix} Mexico Rival`,
+      description: 'Control record for the market filter.',
+      market: 'Mexico',
       launchDate: '2032-03-18T12:00:00.000Z',
     },
     reviewMatch: {
       name: `${sharedPrefix} Review Candidate`,
-      description: 'Control para el filtro de estado.',
+      description: 'Control record for the status filter.',
       market: 'Colombia',
       launchDate: '2032-04-10T12:00:00.000Z',
     },
     dateMismatch: {
       name: `${sharedPrefix} Future Control`,
-      description: 'Control fuera del rango de fechas.',
+      description: 'Control record outside the date range.',
       market: 'Colombia',
       launchDate: '2033-01-05T12:00:00.000Z',
     },
@@ -91,19 +97,19 @@ test('filtra lanzamientos por texto, mercado, estado y rango de fechas', async (
 
   await login(page)
 
-  const search = page.getByRole('searchbox', { name: 'Búsqueda' })
-  const market = page.getByLabel('Mercado').first()
-  const status = page.getByLabel('Estado').first()
-  const from = page.getByLabel('Desde')
-  const to = page.getByLabel('Hasta')
+  const search = page.getByRole('searchbox', { name: 'Search' })
+  const market = page.getByLabel('Market').first()
+  const status = page.getByLabel('Status').first()
+  const from = page.getByLabel('From', { exact: true })
+  const to = page.getByLabel('To', { exact: true })
   const launchLink = (name) => page.getByRole('link', { name, exact: true })
 
   await search.fill(`${sharedPrefix} Solar`)
-  await expect(page).toHaveURL(new RegExp(`search=Filtros(?:\\+|%20)${runId}`))
+  await expect(page).toHaveURL(new RegExp(`search=Filters(?:\\+|%20)${runId}`))
   await expect(launchLink(launches.textMatch.name)).toBeVisible()
   await expect(launchLink(launches.marketMismatch.name)).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Limpiar búsqueda' }).click()
+  await page.getByRole('button', { name: 'Clear search' }).click()
   await expect(search).toHaveValue('')
   await expect(page).toHaveURL(/\/launches$/)
 
@@ -112,7 +118,7 @@ test('filtra lanzamientos por texto, mercado, estado y rango de fechas', async (
   await expect(launchLink(launches.textMatch.name)).toBeVisible()
   await expect(launchLink(launches.marketMismatch.name)).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Limpiar', exact: true }).click()
+  await page.getByRole('button', { name: 'Clear', exact: true }).click()
   await expect(market).toHaveValue('')
   await expect(page).toHaveURL(/\/launches$/)
 
@@ -121,7 +127,7 @@ test('filtra lanzamientos por texto, mercado, estado y rango de fechas', async (
   await expect(launchLink(launches.reviewMatch.name)).toBeVisible()
   await expect(launchLink(launches.textMatch.name)).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Limpiar', exact: true }).click()
+  await page.getByRole('button', { name: 'Clear', exact: true }).click()
   await expect(status).toHaveValue('')
 
   await from.fill('2032-03-01')
@@ -133,17 +139,17 @@ test('filtra lanzamientos por texto, mercado, estado y rango de fechas', async (
   await expect(launchLink(launches.reviewMatch.name)).toHaveCount(0)
   await expect(launchLink(launches.dateMismatch.name)).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Limpiar', exact: true }).click()
+  await page.getByRole('button', { name: 'Clear', exact: true }).click()
   await expect(from).toHaveValue('')
   await expect(to).toHaveValue('')
   await expect(page).toHaveURL(/\/launches$/)
   await expect(launchLink(launches.textMatch.name)).toBeVisible()
 
-  await search.fill(`${sharedPrefix} sin coincidencias`)
-  await expect(page.getByRole('heading', { name: 'No encontramos coincidencias' })).toBeVisible()
+  await search.fill(`${sharedPrefix} no matches`)
+  await expect(page.getByRole('heading', { name: 'No matches found' })).toBeVisible()
   await expect(launchLink(launches.textMatch.name)).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'Limpiar filtros' }).click()
+  await page.getByRole('button', { name: 'Clear filters' }).click()
   await expect(search).toHaveValue('')
   await expect(page).toHaveURL(/\/launches$/)
   await expect(launchLink(launches.textMatch.name)).toBeVisible()

@@ -1,32 +1,36 @@
-# QA visual final
+# Final Visual QA Report
 
-## Resultado
+## Result
 
-La revisión visual queda aprobada para el alcance local del reto. Se inspeccionaron las vistas principales en escritorio a 1440 × 900 y el dashboard administrativo en móvil a 390 × 844.
+The visual review is approved for the local challenge scope. The main views were inspected at a desktop viewport of 1440 × 900, and the administrator overview was inspected at a mobile viewport of 390 × 844.
 
-| Vista | Comprobaciones | Resultado |
+| View | Checks | Result |
 | --- | --- | --- |
-| Login | Imagen completa en el panel izquierdo, logo legible, formulario, roles y selector de idioma | Aprobado |
-| Dashboard del creador | Jerarquía, métricas, tarjetas, acciones y sidebar | Aprobado |
-| Listado | Filtros, tabla, badges, acciones y contador de resultados | Aprobado |
-| Calendario | Navegación mensual, filtros, cuadrícula, eventos y fecha actual | Aprobado |
-| Detalle | Acciones, datos principales, assets, flujo e historial | Aprobado |
-| Usuarios y permisos | Colores por rol, filtros, tabla y texto de seguridad | Aprobado |
-| Dashboard móvil | Menú, selector de idioma, CTA, métricas, tarjetas y panel de permisos | Aprobado |
+| Login | Full-height campaign image, legible logo, form, roles, and language switcher | Passed |
+| Creator overview | Hierarchy, metrics, cards, actions, and sidebar | Passed |
+| Launch list | Filters, table, status badges, actions, and result count | Passed |
+| Launch calendar | Monthly navigation, filters, grid, events, and current date | Passed |
+| Launch details | Actions, primary information, assets, workflow, and history | Passed |
+| Users and permissions | Role colors, filters, table, and security notice | Passed |
+| Mobile administrator overview | Navigation, language switcher, primary action, metrics, cards, and permissions panel | Passed |
 
-## Criterios transversales
+## Cross-view criteria
 
-- No se detectó desbordamiento horizontal en las capturas de escritorio ni móvil.
-- Las imágenes cargaron sin enlaces rotos.
-- Las fuentes terminaron de cargar antes de cada captura.
-- Los encabezados, CTA y etiquetas no presentan recortes ni saltos problemáticos.
-- El selector `ES / EN` permanece visible en la esquina superior derecha.
-- Los roles conservan el sistema solicitado: administrador dorado, aprobador negro y creador blanco.
-- Los controles interactivos mantienen estados de hover, foco visible y contraste consistente con el sistema actual.
+- No horizontal overflow was detected in the desktop or mobile screenshots.
+- Images loaded without broken references.
+- Fonts finished loading before each screenshot.
+- Operational headings, calls to action, and labels remained legible; the oversized login campaign headline intentionally extends to the panel edge.
+- The `ES / EN` switcher remained visible in the upper-right corner.
+- Role styling followed the requested system: gold administrator, black approver, and white creator.
+- Interactive controls retained visible hover, focus, and contrast states.
+- Statuses used text labels and outlined color cues instead of relying on fully colored containers.
 
-## Ajustes realizados durante el QA
+## Adjustments completed during QA
 
-1. Se eliminó la repetición del total en el listado, que mostraba `4 4 resultados`.
-2. Se corrigió la capitalización de la fecha larga en español para conservar preposiciones en minúscula.
+1. Removed a duplicated result total in the launch list.
+2. Corrected Spanish long-date capitalization so that prepositions remain lowercase.
+3. Reduced the administrator access-control card to match its content.
+4. Increased the internal interface scale to make better use of wide desktop screens.
+5. Strengthened the hover treatment of black buttons by inverting their foreground and background colors.
 
-Las capturas finales y el recorrido están disponibles en la [guía de demostración](demo-guide.md).
+The final screenshots and recommended walkthrough are available in the [demo guide](demo-guide.md).

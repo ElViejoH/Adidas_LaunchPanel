@@ -9,6 +9,6 @@ export async function updateUserRole(req, res) {
   const user = await updateUserRoleRecord(req.params.id, req.body, req.user)
   res.status(200).json({
     data: user,
-    message: 'Permisos actualizados correctamente.',
+    message: 'Permissions updated successfully.',
   })
 }

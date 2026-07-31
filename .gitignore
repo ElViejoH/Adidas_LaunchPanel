@@ -1,16 +1,16 @@
-# Dependencias
+# Dependencies
 node_modules/
 backend/node_modules/
 frontend/node_modules/
 
-# Variables de entorno (los ejemplos sí se versionan)
+# Environment variables (example files remain versioned)
 .env
 .env.*
 !.env.example
 !**/.env.example
 !.env.*.example
 
-# Artefactos de compilación y pruebas
+# Build and test artifacts
 dist/
 build/
 coverage/
@@ -22,17 +22,17 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Base de datos SQLite local
+# Local SQLite database
 *.db
 *.db-journal
 *.db-shm
 *.db-wal
 
-# Cachés
+# Caches
 .vite/
 .eslintcache
 
-# Editor y sistema operativo
+# Editor and operating system
 .DS_Store
 Thumbs.db
 .idea/

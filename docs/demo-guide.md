@@ -1,51 +1,68 @@
-# Guía breve de demostración
+# Six-Minute Demo Guide
 
-Esta guía propone un recorrido de 6 a 8 minutos por las capacidades principales del panel.
+This guide provides a focused walkthrough of the main capabilities of Adidas Launch Panel. The complete desktop and mobile inspection is documented in the [final visual QA report](qa-visual.md).
 
-El resultado de la inspección de escritorio y móvil se documenta en [QA visual final](qa-visual.md).
+The complete narration and recording cues are available in the [six-minute presentation script](presentation-script.md).
 
-## Preparación
+## Demo objective
 
-1. Inicia la API en `http://localhost:4000`.
-2. Inicia el frontend en `http://localhost:5173`.
-3. Usa cualquiera de estas cuentas locales con la contraseña `password123`:
+By the end of the demonstration, the audience should understand how the platform turns a fragmented product-launch process into a role-based, auditable workflow supported by a clear user experience and a simple full-stack architecture.
 
-| Perfil | Correo |
+## Preparation
+
+1. Start the API at `http://localhost:4000`.
+2. Start the frontend at `http://localhost:5173`.
+3. Select `EN` in the language switcher.
+4. Use the local accounts below with the password `password123`.
+
+| Role | Email |
 | --- | --- |
-| Creador | `creator@adidas.com` |
-| Aprobador | `approver@adidas.com` |
-| Administrador | `admin@adidas.com` |
+| Creator | `creator@adidas.com` |
+| Approver | `approver@adidas.com` |
+| Administrator | `admin@adidas.com` |
 
-La base semilla incluye lanzamientos en distintos estados, mercados y fechas.
+The seed database includes launches across different statuses, markets, and dates.
 
-## Recorrido sugerido
+## Recommended timing
 
-1. **Login e idioma.** Muestra la campaña visual de la zona izquierda, selecciona una cuenta de demostración y cambia entre `ES` y `EN` desde la esquina superior derecha.
-2. **Dashboard del creador.** Explica los indicadores, próximos lanzamientos y tareas disponibles. Entra como creador y selecciona **Nuevo lanzamiento**.
-3. **Creación y assets.** Completa nombre, descripción, mercado y fecha. Guarda el borrador, agrega un asset por URL y usa **Enviar a revisión**.
-4. **Filtros y calendario.** Abre **Lanzamientos** y combina búsqueda, mercado, estado y fechas. Luego abre **Calendario** para localizar el lanzamiento y entrar a su detalle.
-5. **Flujo de aprobación.** Cierra sesión, entra como aprobador y abre el lanzamiento enviado. Demuestra **Solicitar cambios** o **Aprobar lanzamiento**. Si lo apruebas, completa con **Publicar lanzamiento**.
-6. **Trazabilidad.** En el detalle, señala el historial de estados, el responsable de cada cambio y sus comentarios.
-7. **Administración.** Entra como administrador, abre **Usuarios y permisos** y cambia el rol de una cuenta que no sea la propia. Explica que la API vuelve a validar el permiso.
-8. **Responsive.** Reduce el ancho de la ventana para mostrar el menú móvil y comprobar que el selector de idioma sigue disponible.
+| Time | Segment | Purpose |
+| --- | --- | --- |
+| `0:00–0:25` | Problem and users | Introduce the coordination and traceability problem |
+| `0:25–0:50` | Solution | Present the shared launch workspace and its three roles |
+| `0:50–4:10` | Live product walkthrough | Demonstrate the complete critical workflow |
+| `4:10–4:50` | Design and UX | Explain hierarchy, role cues, status treatment, and bilingual support |
+| `4:50–5:30` | Technical architecture | Summarize React, Express, Prisma, SQLite, and authorization |
+| `5:30–5:50` | Challenges and lessons | Cover workflow consistency, draft privacy, and automated QA |
+| `5:50–6:00` | Closing | Reinforce the result and acknowledge the local prototype scope |
 
-## Capturas de referencia
+## Product walkthrough
 
-| Vista | Evidencia |
+1. **Login and language.** Show the campaign image, select a demo account, and confirm that `EN` is active in the upper-right language switcher.
+2. **Creator overview.** Explain the metrics, upcoming launches, and available tasks. Sign in as the creator and select **Create launch**.
+3. **Launch and asset creation.** Complete the name, description, market, and launch date. Save the draft, add an asset URL, and select **Submit for review**.
+4. **Filters and calendar.** Open **Launches**, combine search, market, status, and date filters, and then locate the launch in **Launch calendar**.
+5. **Approval workflow.** Sign out, enter as the approver, and open the submitted launch. Demonstrate **Request changes** or **Approve launch**. If approved, finish with **Publish launch**.
+6. **Traceability.** Point out the status history, the actor responsible for each transition, its timestamp, and any associated comment.
+7. **Administration.** Enter as the administrator, open **Users and permissions**, and change the role of an account other than the current administrator. Explain that the API independently validates the action.
+8. **Responsive behavior.** Reduce the viewport width to show the mobile navigation and confirm that the language switcher remains available.
+
+## Reference screenshots
+
+| View | Evidence |
 | --- | --- |
 | Login | [01-login.png](screenshots/01-login.png) |
-| Dashboard del creador | [02-dashboard-creador.png](screenshots/02-dashboard-creador.png) |
-| Listado y filtros | [03-listado-lanzamientos.png](screenshots/03-listado-lanzamientos.png) |
-| Calendario | [04-calendario.png](screenshots/04-calendario.png) |
-| Detalle | [05-detalle-lanzamiento.png](screenshots/05-detalle-lanzamiento.png) |
-| Usuarios y permisos | [06-usuarios-permisos.png](screenshots/06-usuarios-permisos.png) |
-| Dashboard móvil | [07-dashboard-admin-movil.png](screenshots/07-dashboard-admin-movil.png) |
+| Creator overview | [02-creator-overview.png](screenshots/02-creator-overview.png) |
+| Launch list and filters | [03-launch-list.png](screenshots/03-launch-list.png) |
+| Launch calendar | [04-launch-calendar.png](screenshots/04-launch-calendar.png) |
+| Launch details | [05-launch-details.png](screenshots/05-launch-details.png) |
+| Users and permissions | [06-users-permissions.png](screenshots/06-users-permissions.png) |
+| Mobile administrator overview | [07-mobile-admin-overview.png](screenshots/07-mobile-admin-overview.png) |
 
-## Regenerar las capturas
+## Regenerating the screenshots
 
-Las capturas usan la base E2E aislada y no modifican `backend/prisma/dev.db`.
+The screenshot flow uses the isolated E2E database and never modifies `backend/prisma/dev.db`.
 
-Desde PowerShell:
+From PowerShell:
 
 ```powershell
 cd frontend
@@ -54,4 +71,4 @@ npx playwright test e2e/demo-capture.spec.js
 Remove-Item Env:CAPTURE_DEMO
 ```
 
-El proceso recrea `docs/screenshots/` con una resolución de escritorio de 1440 × 900 y una vista móvil de 390 × 844.
+The process recreates the reference screenshots with the English interface at a desktop viewport of 1440 × 900 and a mobile viewport of 390 × 844.

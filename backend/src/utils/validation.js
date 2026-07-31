@@ -37,9 +37,9 @@ export const CONTENT_LIMITS = Object.freeze({
   assetsPerLaunch: 10,
 })
 
-export function ensureObject(value, label = 'El cuerpo de la solicitud') {
+export function ensureObject(value, label = 'The request body') {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new AppError(`${label} debe ser un objeto JSON.`, 400, 'VALIDATION_ERROR')
+    throw new AppError(`${label} must be a JSON object.`, 400, 'VALIDATION_ERROR')
   }
 
   return value
@@ -49,7 +49,7 @@ export function parsePositiveId(value, label = 'id') {
   const parsed = Number(value)
 
   if (!Number.isSafeInteger(parsed) || parsed <= 0) {
-    throw new AppError(`${label} debe ser un entero positivo.`, 400, 'INVALID_ID', {
+    throw new AppError(`${label} must be a positive integer.`, 400, 'INVALID_ID', {
       field: label,
     })
   }
@@ -59,7 +59,7 @@ export function parsePositiveId(value, label = 'id') {
 
 export function requiredString(value, field, maxLength = 255) {
   if (typeof value !== 'string' || !value.trim()) {
-    throw new AppError(`El campo ${field} es obligatorio.`, 400, 'VALIDATION_ERROR', {
+    throw new AppError(`The ${field} field is required.`, 400, 'VALIDATION_ERROR', {
       field,
     })
   }
@@ -67,7 +67,7 @@ export function requiredString(value, field, maxLength = 255) {
   const normalized = value.trim()
   if (normalized.length > maxLength) {
     throw new AppError(
-      `El campo ${field} no puede superar ${maxLength} caracteres.`,
+      `The ${field} field cannot exceed ${maxLength} characters.`,
       400,
       'VALIDATION_ERROR',
       { field, maxLength },
@@ -80,7 +80,7 @@ export function requiredString(value, field, maxLength = 255) {
 export function optionalString(value, field, maxLength = 1000, fallback = '') {
   if (value === undefined || value === null) return fallback
   if (typeof value !== 'string') {
-    throw new AppError(`El campo ${field} debe ser texto.`, 400, 'VALIDATION_ERROR', {
+    throw new AppError(`The ${field} field must be a string.`, 400, 'VALIDATION_ERROR', {
       field,
     })
   }
@@ -88,7 +88,7 @@ export function optionalString(value, field, maxLength = 1000, fallback = '') {
   const normalized = value.trim()
   if (normalized.length > maxLength) {
     throw new AppError(
-      `El campo ${field} no puede superar ${maxLength} caracteres.`,
+      `The ${field} field cannot exceed ${maxLength} characters.`,
       400,
       'VALIDATION_ERROR',
       { field, maxLength },
@@ -125,7 +125,7 @@ function parseDateOnly(value, endOfDay) {
 
 export function parseDateValue(value, field, { endOfDay = false, dateOnlyAtNoon = false } = {}) {
   if (typeof value !== 'string' && !(value instanceof Date)) {
-    throw new AppError(`El campo ${field} debe contener una fecha válida.`, 400, 'VALIDATION_ERROR', {
+    throw new AppError(`The ${field} field must contain a valid date.`, 400, 'VALIDATION_ERROR', {
       field,
     })
   }
@@ -145,7 +145,7 @@ export function parseDateValue(value, field, { endOfDay = false, dateOnlyAtNoon 
   }
 
   if (Number.isNaN(date.getTime())) {
-    throw new AppError(`El campo ${field} debe contener una fecha válida.`, 400, 'VALIDATION_ERROR', {
+    throw new AppError(`The ${field} field must contain a valid date.`, 400, 'VALIDATION_ERROR', {
       field,
     })
   }
@@ -161,7 +161,7 @@ export function validateHttpUrl(value, field = 'url') {
     if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Unsupported protocol')
   } catch {
     throw new AppError(
-      `El campo ${field} debe ser una URL HTTP o HTTPS válida.`,
+      `The ${field} field must be a valid HTTP or HTTPS URL.`,
       400,
       'VALIDATION_ERROR',
       { field },

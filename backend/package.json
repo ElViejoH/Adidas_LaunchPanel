@@ -2,7 +2,7 @@
   "name": "adidas-launch-panel-backend",
   "version": "1.0.0",
   "private": true,
-  "description": "API REST para la gestión interna de lanzamientos de producto de Adidas.",
+  "description": "REST API for internal Adidas product launch management.",
   "type": "module",
   "main": "src/server.js",
   "scripts": {

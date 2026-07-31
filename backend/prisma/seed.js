@@ -66,8 +66,8 @@ async function main() {
     },
   });
 
-  // Elimina únicamente los registros demo conocidos para que ejecutar el seed
-  // varias veces no duplique datos ni afecte lanzamientos creados por el usuario.
+  // Delete only known demo records so repeated seed runs do not duplicate data
+  // or affect launches created by the user.
   await prisma.launch.deleteMany({
     where: {
       creatorId: creator.id,
@@ -82,7 +82,7 @@ async function main() {
   await prisma.launch.create({
     data: {
       name: SEED_LAUNCH_NAMES[0],
-      description: 'Edición local de Samba OG con campaña enfocada en cultura urbana de Bogotá.',
+      description: 'Local Samba OG edition with a campaign focused on Bogota urban culture.',
       market: 'Colombia',
       launchDate: addDays(today, 21),
       status: LaunchStatus.DRAFT,
@@ -90,7 +90,7 @@ async function main() {
       assets: {
         create: [
           {
-            name: 'Moodboard de campaña',
+            name: 'Campaign moodboard',
             type: 'IMAGE',
             url: 'https://assets.example.com/samba-bogota/moodboard.jpg',
           },
@@ -102,7 +102,7 @@ async function main() {
   await prisma.launch.create({
     data: {
       name: SEED_LAUNCH_NAMES[1],
-      description: 'Lanzamiento regional de Ultraboost 5 con activaciones para corredores urbanos.',
+      description: 'Regional Ultraboost 5 launch with activations for urban runners.',
       market: 'LATAM',
       launchDate: addDays(today, 35),
       status: LaunchStatus.IN_REVIEW,
@@ -110,12 +110,12 @@ async function main() {
       assets: {
         create: [
           {
-            name: 'Key visual regional',
+            name: 'Regional key visual',
             type: 'IMAGE',
             url: 'https://assets.example.com/ultraboost-5/key-visual.jpg',
           },
           {
-            name: 'Plan de medios',
+            name: 'Media plan',
             type: 'DOCUMENT',
             url: 'https://assets.example.com/ultraboost-5/media-plan.pdf',
           },
@@ -126,7 +126,7 @@ async function main() {
           previousStatus: LaunchStatus.DRAFT,
           newStatus: LaunchStatus.IN_REVIEW,
           changedById: creator.id,
-          comment: 'Materiales listos para validación regional.',
+          comment: 'Materials are ready for regional review.',
           createdAt: twoDaysAgo,
         },
       },
@@ -136,7 +136,7 @@ async function main() {
   await prisma.launch.create({
     data: {
       name: SEED_LAUNCH_NAMES[2],
-      description: 'Campaña de velocidad para Adizero Adios Pro 4 en el mercado colombiano.',
+      description: 'Speed campaign for Adizero Adios Pro 4 in the Colombian market.',
       market: 'Colombia',
       launchDate: addDays(today, 49),
       status: LaunchStatus.APPROVED,
@@ -144,7 +144,7 @@ async function main() {
       assets: {
         create: [
           {
-            name: 'Video hero',
+            name: 'Hero video',
             type: 'VIDEO',
             url: 'https://assets.example.com/adizero-pro-4/hero-video.mp4',
           },
@@ -156,14 +156,14 @@ async function main() {
             previousStatus: LaunchStatus.DRAFT,
             newStatus: LaunchStatus.IN_REVIEW,
             changedById: creator.id,
-            comment: 'Envío inicial a aprobación.',
+            comment: 'Initial submission for approval.',
             createdAt: twoDaysAgo,
           },
           {
             previousStatus: LaunchStatus.IN_REVIEW,
             newStatus: LaunchStatus.APPROVED,
             changedById: approver.id,
-            comment: 'Campaña aprobada para producción.',
+            comment: 'Campaign approved for production.',
             createdAt: oneDayAgo,
           },
         ],
@@ -174,15 +174,15 @@ async function main() {
   await prisma.launch.create({
     data: {
       name: SEED_LAUNCH_NAMES[3],
-      description: 'Relanzamiento de silos clásicos de fútbol con narrativa de archivo.',
-      market: 'México',
+      description: 'Relaunch of classic football silhouettes with an archive-led narrative.',
+      market: 'Mexico',
       launchDate: addDays(today, -14),
       status: LaunchStatus.PUBLISHED,
       creatorId: creator.id,
       assets: {
         create: [
           {
-            name: 'Lookbook final',
+            name: 'Final lookbook',
             type: 'DOCUMENT',
             url: 'https://assets.example.com/predator-archive/lookbook.pdf',
           },
@@ -194,21 +194,21 @@ async function main() {
             previousStatus: LaunchStatus.DRAFT,
             newStatus: LaunchStatus.IN_REVIEW,
             changedById: creator.id,
-            comment: 'Solicitud de aprobación editorial.',
+            comment: 'Editorial approval requested.',
             createdAt: addDays(today, -20),
           },
           {
             previousStatus: LaunchStatus.IN_REVIEW,
             newStatus: LaunchStatus.APPROVED,
             changedById: approver.id,
-            comment: 'Contenido y fechas aprobados.',
+            comment: 'Content and dates approved.',
             createdAt: addDays(today, -18),
           },
           {
             previousStatus: LaunchStatus.APPROVED,
             newStatus: LaunchStatus.PUBLISHED,
             changedById: approver.id,
-            comment: 'Publicado según el calendario comercial.',
+            comment: 'Published according to the commercial calendar.',
             createdAt: addDays(today, -14),
           },
         ],
@@ -219,7 +219,7 @@ async function main() {
   await prisma.launch.create({
     data: {
       name: SEED_LAUNCH_NAMES[4],
-      description: 'Actualización de campaña outdoor pendiente de ajustes en el key visual.',
+      description: 'Outdoor campaign refresh pending key visual adjustments.',
       market: 'LATAM',
       launchDate: addDays(today, 63),
       status: LaunchStatus.CHANGES_REQUESTED,
@@ -230,14 +230,14 @@ async function main() {
             previousStatus: LaunchStatus.DRAFT,
             newStatus: LaunchStatus.IN_REVIEW,
             changedById: creator.id,
-            comment: 'Primera propuesta lista para revisión.',
+            comment: 'First proposal ready for review.',
             createdAt: twoDaysAgo,
           },
           {
             previousStatus: LaunchStatus.IN_REVIEW,
             newStatus: LaunchStatus.CHANGES_REQUESTED,
             changedById: approver.id,
-            comment: 'Ajustar contraste del producto y claim regional.',
+            comment: 'Adjust product contrast and the regional claim.',
             createdAt: oneDayAgo,
           },
         ],
@@ -248,7 +248,7 @@ async function main() {
   await prisma.launch.create({
     data: {
       name: SEED_LAUNCH_NAMES[5],
-      description: 'Propuesta de colaboración evaluada para el calendario Originals.',
+      description: 'Collaboration proposal evaluated for the Originals calendar.',
       market: 'Global',
       launchDate: addDays(today, 77),
       status: LaunchStatus.REJECTED,
@@ -259,14 +259,14 @@ async function main() {
             previousStatus: LaunchStatus.DRAFT,
             newStatus: LaunchStatus.IN_REVIEW,
             changedById: creator.id,
-            comment: 'Propuesta enviada al comité global.',
+            comment: 'Proposal submitted to the global committee.',
             createdAt: twoDaysAgo,
           },
           {
             previousStatus: LaunchStatus.IN_REVIEW,
             newStatus: LaunchStatus.REJECTED,
             changedById: approver.id,
-            comment: 'La propuesta no se alinea con el calendario comercial actual.',
+            comment: 'The proposal does not align with the current commercial calendar.',
             createdAt: oneDayAgo,
           },
         ],
@@ -274,12 +274,12 @@ async function main() {
     },
   });
 
-  console.log('Seed completado: 3 usuarios y 6 lanzamientos de ejemplo.');
+  console.log('Seed completed: 3 users and 6 sample launches.');
 }
 
 main()
   .catch((error) => {
-    console.error('No fue posible completar el seed.', error);
+    console.error('The seed could not be completed.', error);
     process.exitCode = 1;
   })
   .finally(async () => {

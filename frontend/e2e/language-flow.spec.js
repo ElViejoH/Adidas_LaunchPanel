@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('cambia todo el panel entre español e inglés y conserva la preferencia', async ({ page }) => {
+test('switches the entire panel between Spanish and English and preserves the preference', async ({ page }) => {
   await page.goto('/login')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
@@ -47,7 +47,7 @@ test('cambia todo el panel entre español e inglés y conserva la preferencia', 
   await expect(page.getByRole('heading', { name: 'Inicia sesión' })).toBeVisible()
 })
 
-test('mantiene el selector visible en una pantalla de 320 px', async ({ page }) => {
+test('keeps the language switcher visible at a 320 px viewport', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 })
   await page.goto('/login')
   await page.evaluate(() => localStorage.clear())

@@ -15,9 +15,9 @@ function renderRoute(isAuthenticated) {
       <MemoryRouter initialEntries={['/private']}>
         <LocationProbe />
         <Routes>
-          <Route path="/login" element={<h1>Inicio de sesión</h1>} />
+          <Route path="/login" element={<h1>Sign in</h1>} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/private" element={<h1>Contenido privado</h1>} />
+            <Route path="/private" element={<h1>Private content</h1>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -26,17 +26,17 @@ function renderRoute(isAuthenticated) {
 }
 
 describe('ProtectedRoute', () => {
-  test('redirige al login cuando no existe una sesión', async () => {
+  test('redirects to login when no session exists', async () => {
     renderRoute(false)
 
-    expect(await screen.findByRole('heading', { name: 'Inicio de sesión' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/login')
   })
 
-  test('renderiza la ruta privada para una sesión autenticada', () => {
+  test('renders the private route for an authenticated session', () => {
     renderRoute(true)
 
-    expect(screen.getByRole('heading', { name: 'Contenido privado' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Private content' })).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/private')
   })
 })

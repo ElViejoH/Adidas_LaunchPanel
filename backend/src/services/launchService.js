@@ -59,7 +59,7 @@ function parsePaginationValue(value, field, fallback) {
 
   const parsed = Number(value)
   if (!Number.isSafeInteger(parsed) || parsed <= 0) {
-    throw new AppError(`El parámetro ${field} debe ser un entero positivo.`, 400, 'VALIDATION_ERROR', {
+    throw new AppError(`The ${field} parameter must be a positive integer.`, 400, 'VALIDATION_ERROR', {
       field,
     })
   }
@@ -86,7 +86,7 @@ function buildLaunchData(payload) {
 function assertCreator(actor) {
   if (actor?.role !== USER_ROLES.CREATOR) {
     throw new AppError(
-      'Solo un usuario CREATOR puede realizar esta acción.',
+      'Only a CREATOR user can perform this action.',
       403,
       'FORBIDDEN',
     )
@@ -98,7 +98,7 @@ function assertOwner(actor, launch) {
 
   if (launch.creatorId !== actor.id) {
     throw new AppError(
-      'Solo el creador propietario puede modificar este lanzamiento.',
+      'Only the launch owner can modify this launch.',
       403,
       'NOT_LAUNCH_OWNER',
     )
@@ -108,7 +108,7 @@ function assertOwner(actor, launch) {
 function assertEditableStatus(launch) {
   if (!editableStatuses.includes(launch.status)) {
     throw new AppError(
-      'Esta acción solo está disponible mientras el lanzamiento está en DRAFT o IN_REVIEW.',
+      'This action is only available while the launch is in DRAFT or IN_REVIEW.',
       409,
       'EDITABLE_STATUS_REQUIRED',
       { currentStatus: launch.status, allowedStatuses: editableStatuses },
@@ -141,7 +141,7 @@ function assertTransitionPermission(actor, launch) {
     actor?.role !== USER_ROLES.APPROVER
   ) {
     throw new AppError(
-      'Solo un usuario APPROVER puede decidir sobre lanzamientos en revisión o publicarlos.',
+      'Only an APPROVER user can decide on launches in review or publish them.',
       403,
       'FORBIDDEN',
     )
@@ -152,7 +152,7 @@ function assertTransitionPermission(actor, launch) {
     actor?.id === launch.creatorId
   ) {
     throw new AppError(
-      'No puedes aprobar ni publicar un lanzamiento que creaste.',
+      'You cannot approve or publish a launch that you created.',
       403,
       'SELF_APPROVAL_FORBIDDEN',
     )
@@ -169,14 +169,14 @@ function parseListFilters(query = {}) {
   const limit = parsePaginationValue(query.limit, 'limit', 100)
 
   if (limit > 100) {
-    throw new AppError('El parámetro limit no puede superar 100.', 400, 'VALIDATION_ERROR', {
+    throw new AppError('The limit parameter cannot exceed 100.', 400, 'VALIDATION_ERROR', {
       field: 'limit',
       max: 100,
     })
   }
 
   if (status && !VALID_LAUNCH_STATUSES.includes(status)) {
-    throw new AppError('El filtro status no es válido.', 400, 'VALIDATION_ERROR', {
+    throw new AppError('The status filter is invalid.', 400, 'VALIDATION_ERROR', {
       field: 'status',
       allowedValues: VALID_LAUNCH_STATUSES,
     })
@@ -193,7 +193,7 @@ function parseListFilters(query = {}) {
 
   if (startDate && endDate && startDate > endDate) {
     throw new AppError(
-      'startDate no puede ser posterior a endDate.',
+      'startDate cannot be later than endDate.',
       400,
       'INVALID_DATE_RANGE',
       { from: startDateInput, to: endDateInput },
@@ -202,14 +202,14 @@ function parseListFilters(query = {}) {
 
   const allowedSortFields = ['launchDate', 'createdAt', 'updatedAt', 'name', 'market', 'status']
   if (!allowedSortFields.includes(sortBy)) {
-    throw new AppError('El parámetro sortBy no es válido.', 400, 'VALIDATION_ERROR', {
+    throw new AppError('The sortBy parameter is invalid.', 400, 'VALIDATION_ERROR', {
       field: 'sortBy',
       allowedValues: allowedSortFields,
     })
   }
 
   if (!['asc', 'desc'].includes(sortOrder)) {
-    throw new AppError('El parámetro sortOrder debe ser asc o desc.', 400, 'VALIDATION_ERROR', {
+    throw new AppError('The sortOrder parameter must be asc or desc.', 400, 'VALIDATION_ERROR', {
       field: 'sortOrder',
       allowedValues: ['asc', 'desc'],
     })
@@ -279,7 +279,7 @@ export async function getLaunchById(rawId, actor) {
   })
 
   if (!launch) {
-    throw new AppError('El lanzamiento solicitado no existe.', 404, 'LAUNCH_NOT_FOUND')
+    throw new AppError('The requested launch does not exist.', 404, 'LAUNCH_NOT_FOUND')
   }
 
   return launch
@@ -304,7 +304,7 @@ export async function updateLaunch(rawId, payload, actor) {
   const current = await prisma.launch.findUnique({ where: { id } })
 
   if (!current) {
-    throw new AppError('El lanzamiento solicitado no existe.', 404, 'LAUNCH_NOT_FOUND')
+    throw new AppError('The requested launch does not exist.', 404, 'LAUNCH_NOT_FOUND')
   }
 
   assertOwner(actor, current)
@@ -322,7 +322,7 @@ export async function updateLaunch(rawId, payload, actor) {
 
   if (result.count !== 1) {
     throw new AppError(
-      'El lanzamiento cambió mientras se intentaba editar. Recarga la información.',
+      'The launch changed while it was being edited. Reload the data.',
       409,
       'CONCURRENT_MODIFICATION',
     )
@@ -336,7 +336,7 @@ export async function deleteLaunch(rawId, actor) {
   const current = await prisma.launch.findUnique({ where: { id } })
 
   if (!current) {
-    throw new AppError('El lanzamiento solicitado no existe.', 404, 'LAUNCH_NOT_FOUND')
+    throw new AppError('The requested launch does not exist.', 404, 'LAUNCH_NOT_FOUND')
   }
 
   assertOwner(actor, current)
@@ -352,7 +352,7 @@ export async function deleteLaunch(rawId, actor) {
 
   if (result.count !== 1) {
     throw new AppError(
-      'El lanzamiento cambió mientras se intentaba eliminar. Recarga la información.',
+      'The launch changed while it was being deleted. Reload the data.',
       409,
       'CONCURRENT_MODIFICATION',
     )
@@ -367,7 +367,7 @@ export async function changeLaunchStatus(rawId, payload, actor) {
   const newStatus = requiredString(body.newStatus ?? body.status, 'newStatus', 30)
 
   if (!VALID_LAUNCH_STATUSES.includes(newStatus)) {
-    throw new AppError('El estado solicitado no es válido.', 400, 'VALIDATION_ERROR', {
+    throw new AppError('The requested status is invalid.', 400, 'VALIDATION_ERROR', {
       field: 'newStatus',
       allowedValues: VALID_LAUNCH_STATUSES,
     })
@@ -377,7 +377,7 @@ export async function changeLaunchStatus(rawId, payload, actor) {
 
   if (statusesRequiringComment.has(newStatus) && !comment) {
     throw new AppError(
-      'El comentario es obligatorio al solicitar cambios o rechazar un lanzamiento.',
+      'A comment is required when requesting changes or rejecting a launch.',
       400,
       'COMMENT_REQUIRED',
       { field: 'comment', requestedStatus: newStatus },
@@ -388,13 +388,13 @@ export async function changeLaunchStatus(rawId, payload, actor) {
     const current = await tx.launch.findUnique({ where: { id } })
 
     if (!current) {
-      throw new AppError('El lanzamiento solicitado no existe.', 404, 'LAUNCH_NOT_FOUND')
+      throw new AppError('The requested launch does not exist.', 404, 'LAUNCH_NOT_FOUND')
     }
 
     const allowedStatuses = allowedStatusesByCurrent[current.status] ?? []
     if (!allowedStatuses.includes(newStatus)) {
       throw new AppError(
-        'La transición de estado solicitada no está permitida.',
+        'The requested status transition is not allowed.',
         409,
         'INVALID_STATUS_TRANSITION',
         {
@@ -414,7 +414,7 @@ export async function changeLaunchStatus(rawId, payload, actor) {
 
     if (updateResult.count !== 1) {
       throw new AppError(
-        'El estado cambió mientras se procesaba la solicitud. Recarga la información.',
+        'The status changed while the request was being processed. Reload the data.',
         409,
         'CONCURRENT_MODIFICATION',
       )
@@ -450,7 +450,7 @@ export async function getLaunchHistory(rawId, actor) {
   })
 
   if (!exists) {
-    throw new AppError('El lanzamiento solicitado no existe.', 404, 'LAUNCH_NOT_FOUND')
+    throw new AppError('The requested launch does not exist.', 404, 'LAUNCH_NOT_FOUND')
   }
 
   return prisma.statusHistory.findMany({

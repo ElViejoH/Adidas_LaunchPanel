@@ -43,7 +43,7 @@ describe('UserManagementPage', () => {
     userService.updateRole.mockResolvedValue({ ...creator, role: USER_ROLES.APPROVER })
   })
 
-  test('lista usuarios y protege el rol de la cuenta actual', async () => {
+  test('lists users and protects the current account role', async () => {
     renderPage()
 
     expect((await screen.findAllByText('creator@adidas.com')).length).toBeGreaterThan(0)
@@ -55,7 +55,7 @@ describe('UserManagementPage', () => {
       .forEach((select) => expect(select).toBeEnabled())
   })
 
-  test('solicita confirmación antes de actualizar un rol', async () => {
+  test('requests confirmation before updating a role', async () => {
     const user = userEvent.setup()
     renderPage()
     const [roleSelect] = await screen.findAllByRole('combobox', { name: 'Rol de creator@adidas.com' })

@@ -20,7 +20,7 @@ const publicUserSelect = {
 function assertAdmin(actor) {
   if (actor?.role !== USER_ROLES.ADMIN) {
     throw new AppError(
-      'Solo un usuario ADMIN puede administrar los permisos.',
+      'Only an ADMIN user can manage permissions.',
       403,
       'FORBIDDEN',
     )
@@ -33,7 +33,7 @@ export async function listUsers(query = {}, actor) {
   const role = optionalString(query.role, 'role', 20, '')
 
   if (role && !VALID_USER_ROLES.includes(role)) {
-    throw new AppError('El filtro role no es válido.', 400, 'VALIDATION_ERROR', {
+    throw new AppError('The role filter is invalid.', 400, 'VALIDATION_ERROR', {
       field: 'role',
       allowedValues: VALID_USER_ROLES,
     })
@@ -65,7 +65,7 @@ export async function updateUserRole(rawId, payload, actor) {
   const role = requiredString(body.role, 'role', 20)
 
   if (!VALID_USER_ROLES.includes(role)) {
-    throw new AppError('El rol solicitado no es válido.', 400, 'VALIDATION_ERROR', {
+    throw new AppError('The requested role is invalid.', 400, 'VALIDATION_ERROR', {
       field: 'role',
       allowedValues: VALID_USER_ROLES,
     })
@@ -77,7 +77,7 @@ export async function updateUserRole(rawId, payload, actor) {
   })
 
   if (!current) {
-    throw new AppError('El usuario solicitado no existe.', 404, 'USER_NOT_FOUND')
+    throw new AppError('The requested user does not exist.', 404, 'USER_NOT_FOUND')
   }
 
   if (current.role === role) return current
@@ -97,7 +97,7 @@ export async function updateUserRole(rawId, payload, actor) {
 
   if (result.count !== 1) {
     throw new AppError(
-      'El rol cambió mientras se procesaba la solicitud. Recarga la información.',
+      'The role changed while the request was being processed. Reload the data.',
       409,
       'CONCURRENT_MODIFICATION',
     )

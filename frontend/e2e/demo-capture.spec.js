@@ -11,29 +11,29 @@ const screenshotsDirectory = fileURLToPath(
 
 const demoLaunches = [
   {
-    name: 'Adizero Nova Bogotá',
-    description: 'Campaña regional de running con piezas digitales y retail.',
+    name: 'Adizero Nova Bogota',
+    description: 'Regional running campaign with digital and retail assets.',
     market: 'Colombia',
     dateOffset: 0,
     targetStatus: 'DRAFT',
   },
   {
-    name: 'Samba Studio México',
-    description: 'Activación de Originals para tiendas y canales sociales.',
-    market: 'México',
+    name: 'Samba Studio Mexico',
+    description: 'Originals activation for retail and social channels.',
+    market: 'Mexico',
     dateOffset: 0,
     targetStatus: 'IN_REVIEW',
   },
   {
-    name: 'Terrex Andes Perú',
-    description: 'Lanzamiento outdoor con materiales para socios locales.',
-    market: 'Perú',
+    name: 'Terrex Andes Peru',
+    description: 'Outdoor launch with materials for local partners.',
+    market: 'Peru',
     dateOffset: 1,
     targetStatus: 'APPROVED',
   },
   {
     name: 'Predator Pulse Argentina',
-    description: 'Salida de producto para fútbol con ejecución multicanal.',
+    description: 'Football product release with a multichannel rollout.',
     market: 'Argentina',
     dateOffset: 2,
     targetStatus: 'PUBLISHED',
@@ -97,7 +97,7 @@ async function prepareDemoData(request) {
         creatorToken,
         created.id,
         'IN_REVIEW',
-        'Materiales listos para la demostración.',
+        'Materials are ready for the demonstration.',
       )
     }
     if (['APPROVED', 'PUBLISHED'].includes(launch.targetStatus)) {
@@ -106,7 +106,7 @@ async function prepareDemoData(request) {
         approverToken,
         created.id,
         'APPROVED',
-        'Aprobado para la demostración.',
+        'Approved for the demonstration.',
       )
     }
     if (launch.targetStatus === 'PUBLISHED') {
@@ -115,7 +115,7 @@ async function prepareDemoData(request) {
         approverToken,
         created.id,
         'PUBLISHED',
-        'Publicado para la demostración.',
+        'Published for the demonstration.',
       )
     }
   }
@@ -124,9 +124,9 @@ async function prepareDemoData(request) {
 }
 
 async function login(page, email) {
-  await page.getByLabel('Correo corporativo').fill(email)
-  await page.getByLabel('Contraseña').fill('password123')
-  await page.getByRole('button', { name: 'Entrar al panel' }).click()
+  await page.getByLabel('Corporate email').fill(email)
+  await page.getByLabel('Password').fill('password123')
+  await page.getByRole('button', { name: 'Enter the panel' }).click()
   await expect(page).not.toHaveURL(/\/login$/)
 }
 
@@ -151,10 +151,10 @@ async function capture(page, filename) {
 
 test.skip(
   process.env.CAPTURE_DEMO !== '1',
-  'Las capturas se regeneran sólo con CAPTURE_DEMO=1.',
+  'Screenshots are regenerated only when CAPTURE_DEMO=1.',
 )
 
-test('genera las capturas del recorrido de demostración', async ({ page, request }) => {
+test('generates the demo walkthrough screenshots', async ({ page, request }) => {
   await mkdir(screenshotsDirectory, { recursive: true })
   const launches = await prepareDemoData(request)
   const runtimeErrors = []
@@ -165,45 +165,48 @@ test('genera las capturas del recorrido de demostración', async ({ page, reques
 
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/login')
-  await page.evaluate(() => localStorage.clear())
+  await page.evaluate(() => {
+    localStorage.clear()
+    localStorage.setItem('adidas-launch-panel.language', 'en')
+  })
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'Inicia sesión' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
   await capture(page, '01-login.png')
 
   await login(page, 'creator.e2e@adidas.test')
-  await expect(page.getByRole('heading', { name: 'Hola, E2E' })).toBeVisible()
-  await expect(page.getByText('Adizero Nova Bogotá')).toBeVisible()
-  await capture(page, '02-dashboard-creador.png')
+  await expect(page.getByRole('heading', { name: 'Hello, E2E' })).toBeVisible()
+  await expect(page.getByText('Adizero Nova Bogota')).toBeVisible()
+  await capture(page, '02-creator-overview.png')
 
   await page.goto('/launches')
-  await expect(page.getByRole('heading', { name: 'Lanzamientos' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Launches' })).toBeVisible()
   await expect(
-    page.getByRole('link', { name: 'Samba Studio México', exact: true }),
+    page.getByRole('link', { name: 'Samba Studio Mexico', exact: true }),
   ).toBeVisible()
-  await capture(page, '03-listado-lanzamientos.png')
+  await capture(page, '03-launch-list.png')
 
   await page.goto('/calendar')
-  await expect(page.getByRole('heading', { name: 'Calendario de lanzamientos' })).toBeVisible()
-  await expect(page.getByTitle('Adizero Nova Bogotá')).toBeVisible()
-  await capture(page, '04-calendario.png')
+  await expect(page.getByRole('heading', { name: 'Launch calendar' })).toBeVisible()
+  await expect(page.getByTitle('Adizero Nova Bogota')).toBeVisible()
+  await capture(page, '04-launch-calendar.png')
 
   await page.goto(`/launches/${launches[0].id}`)
-  await expect(page.getByRole('heading', { name: 'Adizero Nova Bogotá' })).toBeVisible()
-  await capture(page, '05-detalle-lanzamiento.png')
+  await expect(page.getByRole('heading', { name: 'Adizero Nova Bogota' })).toBeVisible()
+  await capture(page, '05-launch-details.png')
 
-  await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+  await page.getByRole('button', { name: 'Sign out' }).click()
   await login(page, 'admin.e2e@adidas.test')
   await page.goto('/users')
-  await expect(page.getByRole('heading', { name: 'Usuarios y permisos' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Users and permissions' })).toBeVisible()
   await expect(
-    page.getByRole('combobox', { name: 'Rol de admin.e2e@adidas.test' }),
+    page.getByRole('combobox', { name: 'Role for admin.e2e@adidas.test' }),
   ).toBeVisible()
-  await capture(page, '06-usuarios-permisos.png')
+  await capture(page, '06-users-permissions.png')
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Hola, E2E' })).toBeVisible()
-  await capture(page, '07-dashboard-admin-movil.png')
+  await expect(page.getByRole('heading', { name: 'Hello, E2E' })).toBeVisible()
+  await capture(page, '07-mobile-admin-overview.png')
 
   expect(runtimeErrors).toEqual([])
 })

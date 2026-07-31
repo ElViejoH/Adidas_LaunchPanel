@@ -32,7 +32,7 @@ export async function deleteLaunch(req, res) {
   const data = await deleteLaunchRecord(req.params.id, req.user)
   res.status(200).json({
     data,
-    message: 'Lanzamiento eliminado correctamente.',
+    message: 'Launch deleted successfully.',
   })
 }
 

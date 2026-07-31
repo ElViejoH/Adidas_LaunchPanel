@@ -3,7 +3,7 @@ import { AppError } from '../utils/AppError.js'
 export function notFoundHandler(req, _res, next) {
   next(
     new AppError(
-      `No existe la ruta ${req.method} ${req.originalUrl}.`,
+      `The route ${req.method} ${req.originalUrl} does not exist.`,
       404,
       'ROUTE_NOT_FOUND',
     ),
@@ -14,29 +14,29 @@ function normalizeError(error) {
   if (error instanceof AppError) return error
 
   if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
-    return new AppError('El cuerpo JSON de la solicitud no es válido.', 400, 'INVALID_JSON')
+    return new AppError('The JSON request body is invalid.', 400, 'INVALID_JSON')
   }
 
   if (error?.code === 'P2002') {
-    return new AppError('Ya existe un registro con esos datos únicos.', 409, 'DUPLICATE_RESOURCE', {
+    return new AppError('A record with that unique data already exists.', 409, 'DUPLICATE_RESOURCE', {
       fields: error.meta?.target,
     })
   }
 
   if (error?.code === 'P2003') {
     return new AppError(
-      'La operación entra en conflicto con registros relacionados.',
+      'The operation conflicts with related records.',
       409,
       'RELATION_CONFLICT',
     )
   }
 
   if (error?.code === 'P2025') {
-    return new AppError('El recurso solicitado no existe.', 404, 'RESOURCE_NOT_FOUND')
+    return new AppError('The requested resource does not exist.', 404, 'RESOURCE_NOT_FOUND')
   }
 
   if (error?.name === 'PrismaClientValidationError') {
-    return new AppError('Los datos enviados no son válidos.', 400, 'VALIDATION_ERROR')
+    return new AppError('The submitted data is invalid.', 400, 'VALIDATION_ERROR')
   }
 
   return error
@@ -54,7 +54,7 @@ export function errorHandler(error, _req, res, _next) {
   const body = {
     error: {
       message: isServerError
-        ? 'Ocurrió un error interno. Inténtalo nuevamente.'
+        ? 'An internal error occurred. Please try again.'
         : normalized.message,
       code: isServerError ? 'INTERNAL_ERROR' : normalized.code || 'REQUEST_FAILED',
     },

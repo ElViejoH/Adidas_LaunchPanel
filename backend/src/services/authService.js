@@ -15,7 +15,7 @@ const publicUserSelect = {
 function getJwtConfiguration() {
   if (!process.env.JWT_SECRET) {
     throw new AppError(
-      'JWT_SECRET no está configurado en el entorno.',
+      'JWT_SECRET is not configured in the environment.',
       500,
       'CONFIGURATION_ERROR',
     )
@@ -32,14 +32,14 @@ export async function login(credentials) {
   const email = requiredString(payload.email, 'email', 320).toLowerCase()
 
   if (typeof payload.password !== 'string' || !payload.password) {
-    throw new AppError('El campo password es obligatorio.', 400, 'VALIDATION_ERROR', {
+    throw new AppError('The password field is required.', 400, 'VALIDATION_ERROR', {
       field: 'password',
     })
   }
 
   if (payload.password.length > 200) {
     throw new AppError(
-      'El campo password no puede superar 200 caracteres.',
+      'The password field cannot exceed 200 characters.',
       400,
       'VALIDATION_ERROR',
       { field: 'password', maxLength: 200 },
@@ -52,7 +52,7 @@ export async function login(credentials) {
     : false
 
   if (!userWithPassword || !isPasswordValid) {
-    throw new AppError('Correo o contraseña incorrectos.', 401, 'INVALID_CREDENTIALS')
+    throw new AppError('Incorrect email or password.', 401, 'INVALID_CREDENTIALS')
   }
 
   const { secret, expiresIn } = getJwtConfiguration()

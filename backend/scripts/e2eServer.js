@@ -72,7 +72,7 @@ async function main() {
 
   const { default: app } = await import('../src/server.js')
   const server = app.listen(4100, '127.0.0.1', () => {
-    console.log('API E2E disponible en http://127.0.0.1:4100')
+    console.log('E2E API available at http://127.0.0.1:4100')
   })
 
   const shutdown = () => {
@@ -86,6 +86,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error('No fue posible iniciar la API E2E.', error)
+  console.error('The E2E API could not be started.', error)
   process.exit(1)
 })

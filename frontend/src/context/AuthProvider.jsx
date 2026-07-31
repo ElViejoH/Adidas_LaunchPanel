@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
           return nextSession
         })
       } catch {
-        // Una falla de red conserva la sesión local. Los 401 ya disparan logout desde apiRequest.
+        // A network failure preserves the local session. apiRequest already logs out on 401 responses.
       }
     }
 

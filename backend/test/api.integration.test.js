@@ -4,8 +4,8 @@ import { after, before, beforeEach, test } from 'node:test'
 import bcrypt from 'bcryptjs'
 import request from 'supertest'
 
-// Esta URL es relativa a prisma/schema.prisma. Mantiene la suite completamente
-// aislada de prisma/dev.db y de cualquier información creada por el usuario.
+// This URL is relative to prisma/schema.prisma. It keeps the suite fully
+// isolated from prisma/dev.db and any user-created data.
 process.env.NODE_ENV = 'test'
 process.env.DATABASE_URL = 'file:../test/.tmp/integration.db'
 process.env.JWT_SECRET = 'integration-test-secret-with-more-than-32-characters'
@@ -98,7 +98,7 @@ async function resetFixture() {
   const draft = await prisma.launch.create({
     data: {
       name: 'Alpha Running Colombia',
-      description: 'Borrador para validar búsqueda y permisos.',
+      description: 'Draft used to validate search and permissions.',
       market: 'Colombia',
       launchDate: new Date('2030-01-10T12:00:00.000Z'),
       status: LaunchStatus.DRAFT,
@@ -117,8 +117,8 @@ async function resetFixture() {
   const privateDraft = await prisma.launch.create({
     data: {
       name: 'Private Basketball Peru',
-      description: 'Borrador privado de otro creador.',
-      market: 'Perú',
+      description: 'Private draft owned by another creator.',
+      market: 'Peru',
       launchDate: new Date('2030-01-25T12:00:00.000Z'),
       status: LaunchStatus.DRAFT,
       creatorId: otherCreator.id,
@@ -128,8 +128,8 @@ async function resetFixture() {
   const inReview = await prisma.launch.create({
     data: {
       name: 'Beta Football Mexico',
-      description: 'Lanzamiento enviado a revisión.',
-      market: 'México',
+      description: 'Launch submitted for review.',
+      market: 'Mexico',
       launchDate: new Date('2030-02-15T12:00:00.000Z'),
       status: LaunchStatus.IN_REVIEW,
       creatorId: creator.id,
@@ -138,7 +138,7 @@ async function resetFixture() {
           previousStatus: LaunchStatus.DRAFT,
           newStatus: LaunchStatus.IN_REVIEW,
           changedById: creator.id,
-          comment: 'Listo para revisión.',
+          comment: 'Ready for review.',
         },
       },
     },
@@ -147,7 +147,7 @@ async function resetFixture() {
   const approved = await prisma.launch.create({
     data: {
       name: 'Gamma Originals Colombia',
-      description: 'Campaña aprobada y pendiente de publicación.',
+      description: 'Approved campaign awaiting publication.',
       market: 'Colombia',
       launchDate: new Date('2030-03-20T12:00:00.000Z'),
       status: LaunchStatus.APPROVED,
@@ -208,7 +208,7 @@ after(async () => {
   await prisma.$disconnect()
 })
 
-test('POST /api/auth/login autentica las credenciales semilla y no expone el hash', async () => {
+test('POST /api/auth/login authenticates seed credentials without exposing the hash', async () => {
   const success = await request(app)
     .post('/api/auth/login')
     .send({ email: emails.creator.toUpperCase(), password: PASSWORD })
@@ -227,7 +227,7 @@ test('POST /api/auth/login autentica las credenciales semilla y no expone el has
   assert.equal(failure.body.error.code, 'INVALID_CREDENTIALS')
 })
 
-test('GET /api/auth/me devuelve el rol efectivo de la sesión', async () => {
+test('GET /api/auth/me returns the effective session role', async () => {
   const token = await loginAs(emails.admin)
   const response = await request(app).get('/api/auth/me').set(bearer(token))
 
@@ -237,7 +237,7 @@ test('GET /api/auth/me devuelve el rol efectivo de la sesión', async () => {
   assert.equal('password' in response.body.data, false)
 })
 
-test('solo ADMIN puede listar usuarios y nunca recibe contraseñas', async () => {
+test('only ADMIN can list users and passwords are never returned', async () => {
   const [adminToken, creatorToken, approverToken] = await Promise.all([
     loginAs(emails.admin),
     loginAs(emails.creator),
@@ -263,7 +263,7 @@ test('solo ADMIN puede listar usuarios y nunca recibe contraseñas', async () =>
   assert.equal(response.body.data.some((user) => 'password' in user), false)
 })
 
-test('ADMIN cambia roles con validación y el permiso aplica a tokens existentes', async () => {
+test('ADMIN changes roles with validation and permissions apply to existing tokens', async () => {
   const [adminToken, creatorToken] = await Promise.all([
     loginAs(emails.admin),
     loginAs(emails.creator),
@@ -291,7 +291,7 @@ test('ADMIN cambia roles con validación y el permiso aplica a tokens existentes
     .post('/api/launches')
     .set(bearer(creatorToken))
     .send({
-      name: 'Permiso anterior',
+      name: 'Previous permission',
       market: 'Colombia',
       launchDate: '2031-09-10',
     })
@@ -310,7 +310,7 @@ test('ADMIN cambia roles con validación y el permiso aplica a tokens existentes
   )
 })
 
-test('ADMIN no puede cambiar su propio rol ni modificar usuarios inexistentes', async () => {
+test('ADMIN cannot change their own role or modify users that do not exist', async () => {
   const token = await loginAs(emails.admin)
 
   const noOp = await request(app)
@@ -334,14 +334,14 @@ test('ADMIN no puede cambiar su propio rol ni modificar usuarios inexistentes', 
   assert.equal(missing.body.error.code, 'USER_NOT_FOUND')
 })
 
-test('GET /api/health comprueba la disponibilidad de la API y la base', async () => {
+test('GET /api/health verifies API and database availability', async () => {
   const response = await request(app).get('/api/health')
 
   assert.equal(response.status, 200)
   assert.deepEqual(response.body, { status: 'ok', database: 'reachable' })
 })
 
-test('las rutas de lanzamientos requieren un Bearer token válido', async () => {
+test('launch routes require a valid Bearer token', async () => {
   const missing = await request(app).get('/api/launches')
   assert.equal(missing.status, 401)
   assert.equal(missing.body.error.code, 'AUTH_REQUIRED')
@@ -353,7 +353,7 @@ test('las rutas de lanzamientos requieren un Bearer token válido', async () => 
   assert.equal(malformed.body.error.code, 'INVALID_TOKEN')
 })
 
-test('GET /api/launches combina búsqueda, mercado, estado, fechas y paginación', async () => {
+test('GET /api/launches combines search, market, status, dates, and pagination', async () => {
   const token = await loginAs(emails.creator)
   const filtered = await request(app)
     .get('/api/launches')
@@ -387,7 +387,7 @@ test('GET /api/launches combina búsqueda, mercado, estado, fechas y paginación
   assert.deepEqual(aliases.body.data.map(({ id }) => id), [fixture.inReview.id])
 })
 
-test('los borradores solo son visibles para la persona que los creó', async () => {
+test('drafts are visible only to the person who created them', async () => {
   const [creatorToken, otherToken, approverToken, adminToken] = await Promise.all([
     loginAs(emails.creator),
     loginAs(emails.otherCreator),
@@ -449,7 +449,7 @@ test('los borradores solo son visibles para la persona que los creó', async () 
   }
 })
 
-test('GET de detalle e historial devuelve relaciones públicas sin contraseñas', async () => {
+test('detail and history endpoints return public relationships without passwords', async () => {
   const [creatorToken, approverToken] = await Promise.all([
     loginAs(emails.creator),
     loginAs(emails.approver),
@@ -474,15 +474,15 @@ test('GET de detalle e historial devuelve relaciones públicas sin contraseñas'
   assert.equal('password' in history.body.data[0].changedBy, false)
 })
 
-test('CREATOR puede crear, editar y eliminar su propio DRAFT sin mutar status ni creatorId', async () => {
+test('CREATOR can create, edit, and delete an owned DRAFT without mutating status or creatorId', async () => {
   const token = await loginAs(emails.creator)
   const createResponse = await request(app)
     .post('/api/launches')
     .set(bearer(token))
     .send({
-      name: 'Nuevo lanzamiento',
-      description: 'Descripción inicial.',
-      market: 'Perú',
+      name: 'New launch',
+      description: 'Initial description.',
+      market: 'Peru',
       launchDate: '2031-04-10T12:00:00.000Z',
       status: LaunchStatus.PUBLISHED,
       creatorId: fixture.approver.id,
@@ -497,8 +497,8 @@ test('CREATOR puede crear, editar y eliminar su propio DRAFT sin mutar status ni
     .put(`/api/launches/${launchId}`)
     .set(bearer(token))
     .send({
-      name: 'Lanzamiento actualizado',
-      description: 'Descripción actualizada.',
+      name: 'Updated launch',
+      description: 'Updated description.',
       market: 'Ecuador',
       launchDate: '2031-05-11T12:00:00.000Z',
       status: LaunchStatus.PUBLISHED,
@@ -506,7 +506,7 @@ test('CREATOR puede crear, editar y eliminar su propio DRAFT sin mutar status ni
     })
 
   assert.equal(updateResponse.status, 200)
-  assert.equal(updateResponse.body.data.name, 'Lanzamiento actualizado')
+  assert.equal(updateResponse.body.data.name, 'Updated launch')
   assert.equal(updateResponse.body.data.status, LaunchStatus.DRAFT)
   assert.equal(updateResponse.body.data.creatorId, fixture.creator.id)
 
@@ -521,15 +521,15 @@ test('CREATOR puede crear, editar y eliminar su propio DRAFT sin mutar status ni
   assert.equal(missing.status, 404)
 })
 
-test('roles, propiedad y estados editables protegen creación, edición y eliminación', async () => {
+test('roles, ownership, and editable statuses protect create, update, and delete operations', async () => {
   const [approverToken, otherToken, creatorToken] = await Promise.all([
     loginAs(emails.approver),
     loginAs(emails.otherCreator),
     loginAs(emails.creator),
   ])
   const validPayload = {
-    name: 'Operación no permitida',
-    description: 'Validación de permisos.',
+    name: 'Forbidden operation',
+    description: 'Permission validation.',
     market: 'Chile',
     launchDate: '2031-06-01T12:00:00.000Z',
   }
@@ -581,7 +581,7 @@ test('roles, propiedad y estados editables protegen creación, edición y elimin
   assert.equal(approvedDelete.body.error.code, 'EDITABLE_STATUS_REQUIRED')
 })
 
-test('CREATOR solo puede avanzar su DRAFT a IN_REVIEW y cada cambio crea historial', async () => {
+test('CREATOR can only move an owned DRAFT to IN_REVIEW and each change creates history', async () => {
   const creatorToken = await loginAs(emails.creator)
   const skipped = await request(app)
     .patch(`/api/launches/${fixture.draft.id}/status`)
@@ -598,12 +598,12 @@ test('CREATOR solo puede avanzar su DRAFT a IN_REVIEW y cada cambio crea histori
   const submitted = await request(app)
     .patch(`/api/launches/${fixture.draft.id}/status`)
     .set(bearer(creatorToken))
-    .send({ status: LaunchStatus.IN_REVIEW, comment: 'Enviar al comité.' })
+    .send({ status: LaunchStatus.IN_REVIEW, comment: 'Submit to the committee.' })
 
   assert.equal(submitted.status, 200)
   assert.equal(submitted.body.data.status, LaunchStatus.IN_REVIEW)
   assert.equal(submitted.body.data.statusHistory.length, 1)
-  assert.equal(submitted.body.data.statusHistory[0].comment, 'Enviar al comité.')
+  assert.equal(submitted.body.data.statusHistory[0].comment, 'Submit to the committee.')
 
   const creatorCannotApprove = await request(app)
     .patch(`/api/launches/${fixture.draft.id}/status`)
@@ -612,7 +612,7 @@ test('CREATOR solo puede avanzar su DRAFT a IN_REVIEW y cada cambio crea histori
   assert.equal(creatorCannotApprove.status, 403)
 })
 
-test('APPROVER aprueba y publica secuencialmente, pero no puede saltar estados', async () => {
+test('APPROVER approves and publishes sequentially but cannot skip statuses', async () => {
   const approverToken = await loginAs(emails.approver)
   const skipped = await request(app)
     .patch(`/api/launches/${fixture.inReview.id}/status`)
@@ -624,14 +624,14 @@ test('APPROVER aprueba y publica secuencialmente, pero no puede saltar estados',
   const approved = await request(app)
     .patch(`/api/launches/${fixture.inReview.id}/status`)
     .set(bearer(approverToken))
-    .send({ newStatus: LaunchStatus.APPROVED, comment: 'Aprobado.' })
+    .send({ newStatus: LaunchStatus.APPROVED, comment: 'Approved.' })
   assert.equal(approved.status, 200)
   assert.equal(approved.body.data.status, LaunchStatus.APPROVED)
 
   const published = await request(app)
     .patch(`/api/launches/${fixture.inReview.id}/status`)
     .set(bearer(approverToken))
-    .send({ status: LaunchStatus.PUBLISHED, comment: 'Publicado.' })
+    .send({ status: LaunchStatus.PUBLISHED, comment: 'Published.' })
   assert.equal(published.status, 200)
   assert.equal(published.body.data.status, LaunchStatus.PUBLISHED)
 
@@ -650,7 +650,7 @@ test('APPROVER aprueba y publica secuencialmente, pero no puede saltar estados',
   )
 })
 
-test('APPROVER no puede enviar un DRAFT a revisión', async () => {
+test('APPROVER cannot submit a DRAFT for review', async () => {
   const token = await loginAs(emails.approver)
   const response = await request(app)
     .patch(`/api/launches/${fixture.draft.id}/status`)
@@ -661,7 +661,7 @@ test('APPROVER no puede enviar un DRAFT a revisión', async () => {
   assert.equal(response.body.error.code, 'FORBIDDEN')
 })
 
-test('APPROVER solicita cambios con comentario y el CREATOR propietario reabre el borrador', async () => {
+test('APPROVER requests changes with a comment and the owning CREATOR reopens the draft', async () => {
   const [creatorToken, otherToken, approverToken] = await Promise.all([
     loginAs(emails.creator),
     loginAs(emails.otherCreator),
@@ -708,16 +708,16 @@ test('APPROVER solicita cambios con comentario y el CREATOR propietario reabre e
     .put(`/api/launches/${fixture.inReview.id}`)
     .set(bearer(creatorToken))
     .send({
-      name: 'Campaña corregida',
-      description: 'Descripción ajustada después del feedback.',
-      market: 'México',
+      name: 'Corrected campaign',
+      description: 'Description adjusted after feedback.',
+      market: 'Mexico',
       launchDate: '2031-06-01T12:00:00.000Z',
     })
   assert.equal(editableAgain.status, 200)
-  assert.equal(editableAgain.body.data.name, 'Campaña corregida')
+  assert.equal(editableAgain.body.data.name, 'Corrected campaign')
 })
 
-test('APPROVER rechaza con motivo y REJECTED queda como estado terminal', async () => {
+test('APPROVER rejects with a reason and REJECTED remains a terminal status', async () => {
   const approverToken = await loginAs(emails.approver)
 
   for (const status of [LaunchStatus.CHANGES_REQUESTED, LaunchStatus.REJECTED]) {
@@ -732,10 +732,10 @@ test('APPROVER rechaza con motivo y REJECTED queda como estado terminal', async 
   const rejected = await request(app)
     .patch(`/api/launches/${fixture.inReview.id}/status`)
     .set(bearer(approverToken))
-    .send({ status: LaunchStatus.REJECTED, comment: 'La propuesta no cumple el brief.' })
+    .send({ status: LaunchStatus.REJECTED, comment: 'The proposal does not meet the brief.' })
   assert.equal(rejected.status, 200)
   assert.equal(rejected.body.data.status, LaunchStatus.REJECTED)
-  assert.equal(rejected.body.data.statusHistory[0].comment, 'La propuesta no cumple el brief.')
+  assert.equal(rejected.body.data.statusHistory[0].comment, 'The proposal does not meet the brief.')
 
   const cannotResume = await request(app)
     .patch(`/api/launches/${fixture.inReview.id}/status`)
@@ -746,7 +746,7 @@ test('APPROVER rechaza con motivo y REJECTED queda como estado terminal', async 
   assert.deepEqual(cannotResume.body.error.details.allowedStatuses, [])
 })
 
-test('assets solo pueden gestionarse por el CREATOR propietario en DRAFT o IN_REVIEW', async () => {
+test('assets can only be managed by the owning CREATOR in DRAFT or IN_REVIEW', async () => {
   const [creatorToken, otherToken, approverToken] = await Promise.all([
     loginAs(emails.creator),
     loginAs(emails.otherCreator),
@@ -778,7 +778,7 @@ test('assets solo pueden gestionarse por el CREATOR propietario en DRAFT o IN_RE
     .post(`/api/launches/${fixture.inReview.id}/assets`)
     .set(bearer(creatorToken))
     .send({
-      name: 'Asset tardío',
+      name: 'Late asset',
       type: 'IMAGE',
       url: 'https://assets.example.test/late.jpg',
     })
@@ -793,21 +793,21 @@ test('assets solo pueden gestionarse por el CREATOR propietario en DRAFT o IN_RE
     .post(`/api/launches/${fixture.draft.id}/assets`)
     .set(bearer(approverToken))
     .send({
-      name: 'Asset del aprobador',
+      name: 'Approver asset',
       type: 'IMAGE',
       url: 'https://assets.example.test/approver.jpg',
     })
   assert.equal(approverAdd.status, 403)
 })
 
-test('assets respetan los tipos permitidos y el límite de 10 por lanzamiento', async () => {
+test('assets enforce the allowed types and the limit of 10 per launch', async () => {
   const token = await loginAs(emails.creator)
 
   const invalidType = await request(app)
     .post(`/api/launches/${fixture.draft.id}/assets`)
     .set(bearer(token))
     .send({
-      name: 'Tipo inválido',
+      name: 'Invalid type',
       type: 'EXECUTABLE',
       url: 'https://assets.example.test/invalid.exe',
     })

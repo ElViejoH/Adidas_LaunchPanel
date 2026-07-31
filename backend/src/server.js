@@ -49,7 +49,7 @@ const isEntryPoint =
 if (isEntryPoint) {
   const port = Number(process.env.PORT) || 4000
   app.listen(port, () => {
-    console.log(`Adidas Launch Panel API disponible en http://localhost:${port}`)
+    console.log(`Adidas Launch Panel API available at http://localhost:${port}`)
   })
 }
 

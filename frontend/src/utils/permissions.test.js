@@ -14,14 +14,14 @@ const otherCreator = { id: 20, role: USER_ROLES.CREATOR }
 const approver = { id: 30, role: USER_ROLES.APPROVER }
 const admin = { id: 40, role: USER_ROLES.ADMIN }
 
-describe('permisos de lanzamientos', () => {
-  test('reconoce al propietario con creatorId directo o anidado', () => {
+describe('launch permissions', () => {
+  test('recognizes ownership through a direct or nested creatorId', () => {
     expect(isLaunchOwner(creator, { creatorId: '10' })).toBe(true)
     expect(isLaunchOwner(creator, { creator: { id: 10 } })).toBe(true)
     expect(isLaunchOwner(otherCreator, { creatorId: 10 })).toBe(false)
   })
 
-  test('solo el creador propietario administra su borrador o lanzamiento en revisión', () => {
+  test('only the owning creator manages a draft or launch in review', () => {
     const draft = { creatorId: creator.id, status: LAUNCH_STATUSES.DRAFT }
     const inReview = { ...draft, status: LAUNCH_STATUSES.IN_REVIEW }
     const approved = { ...draft, status: LAUNCH_STATUSES.APPROVED }
@@ -39,7 +39,7 @@ describe('permisos de lanzamientos', () => {
     expect(canEditLaunch(creator, approved)).toBe(false)
   })
 
-  test('calcula únicamente la siguiente transición permitida por rol', () => {
+  test('returns only the next transition allowed for each role', () => {
     const ownedDraft = { creatorId: creator.id, status: LAUNCH_STATUSES.DRAFT }
     const review = { creatorId: creator.id, status: LAUNCH_STATUSES.IN_REVIEW }
     const approved = { creatorId: creator.id, status: LAUNCH_STATUSES.APPROVED }
@@ -70,7 +70,7 @@ describe('permisos de lanzamientos', () => {
     expect(getAllowedStatusTransitions(approver, rejected)).toEqual([])
   })
 
-  test('ADMIN consulta el panel pero no hereda acciones operativas', () => {
+  test('ADMIN can view the panel without inheriting operational actions', () => {
     const ownDraft = { creatorId: admin.id, status: LAUNCH_STATUSES.DRAFT }
     expect(canCreateLaunch(admin)).toBe(false)
     expect(canEditLaunch(admin, ownDraft)).toBe(false)
