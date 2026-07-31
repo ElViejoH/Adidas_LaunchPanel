@@ -15,6 +15,11 @@ Adidas Launch Panel brings that process into one workspace with four primary goa
 3. Give creators, approvers, and administrators only the actions relevant to their roles.
 4. Preserve an auditable history of every status decision.
 
+## Documentation
+
+- [Figma design and low-fidelity wireframes](https://www.figma.com/design/IyfRvjFwQeB0jIIUews6b5/Sin-t%C3%ADtulo?node-id=0-1&t=HWcsQJqKwZ2tpqZ3-1): login, desktop dashboard, and responsive mobile layout explorations.
+- [Youtube video- presentation] (https://youtu.be/sExVU5YLPLY)
+
 ### Target users
 
 - **Creators:** prepare launches, manage assets, and submit work for review.
@@ -380,9 +385,6 @@ Before a real deployment, the application would require:
 - Observability, backups, recovery procedures, and deployment environments.
 - Accessibility audits across additional browsers, devices, and assistive technologies.
 
-## Documentation
 
-- [Figma design and low-fidelity wireframes](https://www.figma.com/design/IyfRvjFwQeB0jIIUews6b5/Sin-t%C3%ADtulo?node-id=0-1&t=HWcsQJqKwZ2tpqZ3-1): login, desktop dashboard, and responsive mobile layout explorations.
-- [`docs/qa-visual.md`](docs/qa-visual.md): desktop and mobile visual QA record.
 
 
