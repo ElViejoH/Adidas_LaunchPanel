@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, FloppyDisk, WarningCircle } from '@phosphor-icons/react'
+import { FloppyDisk, WarningCircle } from '@phosphor-icons/react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { buttonStyles } from '../components/buttonStyles'
@@ -7,8 +7,10 @@ import { ErrorState, PageSkeleton } from '../components/PageStates'
 import { PageHeader } from '../components/PageHeader'
 import { useAuth } from '../hooks/useAuth'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useI18n } from '../hooks/useI18n'
+import { tApiError } from '../i18n/apiErrors'
 import { launchService } from '../services/launchService'
-import { COMMON_MARKETS, USER_ROLES } from '../utils/constants'
+import { COMMON_MARKETS, CONTENT_LIMITS, USER_ROLES } from '../utils/constants'
 import { toInputDate } from '../utils/date'
 import { canEditLaunch } from '../utils/permissions'
 
@@ -22,7 +24,8 @@ const initialForm = {
 export function LaunchFormPage() {
   const { id } = useParams()
   const isEditing = Boolean(id)
-  useDocumentTitle(isEditing ? 'Editar lanzamiento' : 'Nuevo lanzamiento')
+  const { t } = useI18n()
+  useDocumentTitle(t(isEditing ? 'launchForm.editDocumentTitle' : 'launchForm.newDocumentTitle'))
   const navigate = useNavigate()
   const { user } = useAuth()
   const [form, setForm] = useState(initialForm)
@@ -60,11 +63,29 @@ export function LaunchFormPage() {
 
   const validate = () => {
     const nextErrors = {}
-    if (!form.name.trim()) nextErrors.name = 'Escribe un nombre para el lanzamiento.'
-    if (form.name.trim().length > 120) nextErrors.name = 'Usa un nombre de máximo 120 caracteres.'
-    if (!form.description.trim()) nextErrors.description = 'Agrega una descripción operativa.'
-    if (!form.market.trim()) nextErrors.market = 'Selecciona o escribe un mercado.'
-    if (!form.launchDate) nextErrors.launchDate = 'Selecciona una fecha de lanzamiento.'
+    if (!form.name.trim()) nextErrors.name = { key: 'launchForm.validation.nameRequired' }
+    if (form.name.trim().length > CONTENT_LIMITS.launchName) {
+      nextErrors.name = {
+        key: 'launchForm.validation.nameMaxLength',
+        values: { max: CONTENT_LIMITS.launchName },
+      }
+    }
+    if (form.description.trim().length > CONTENT_LIMITS.launchDescription) {
+      nextErrors.description = {
+        key: 'launchForm.validation.descriptionMaxLength',
+        values: { max: CONTENT_LIMITS.launchDescription },
+      }
+    }
+    if (!form.market.trim()) nextErrors.market = { key: 'launchForm.validation.marketRequired' }
+    if (form.market.trim().length > CONTENT_LIMITS.market) {
+      nextErrors.market = {
+        key: 'launchForm.validation.marketMaxLength',
+        values: { max: CONTENT_LIMITS.market },
+      }
+    }
+    if (!form.launchDate) {
+      nextErrors.launchDate = { key: 'launchForm.validation.launchDateRequired' }
+    }
     setFieldErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -72,7 +93,7 @@ export function LaunchFormPage() {
   const handleChange = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
-    setFieldErrors((current) => ({ ...current, [name]: '' }))
+    setFieldErrors((current) => ({ ...current, [name]: null }))
   }
 
   const handleSubmit = async (event) => {
@@ -107,16 +128,16 @@ export function LaunchFormPage() {
           <span className="mx-auto grid size-12 place-items-center rounded-lg bg-zinc-100 text-zinc-700">
             <WarningCircle size={25} weight="bold" aria-hidden="true" />
           </span>
-          <h1 className="mt-4 text-xl font-black text-zinc-950">Acceso solo para creadores</h1>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">Tu rol puede revisar y aprobar lanzamientos, pero no crear o editar contenido.</p>
-          <Link to="/launches" className={buttonStyles({ variant: 'secondary', className: 'mt-6' })}>Volver a lanzamientos</Link>
+          <h1 className="mt-4 text-xl font-black text-zinc-950">{t('launchForm.creatorOnlyTitle')}</h1>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">{t('launchForm.creatorOnlyDescription')}</p>
+          <Link to="/launches" className={buttonStyles({ variant: 'secondary', className: 'mt-6' })}>{t('launchForm.backToLaunches')}</Link>
         </div>
       </div>
     )
   }
 
   if (isLoading) return <PageSkeleton rows={5} />
-  if (error && !launch && isEditing) return <ErrorState message={error.message} />
+  if (error && !launch && isEditing) return <ErrorState message={tApiError(error, t)} />
 
   if (isEditing && launch && !canEditLaunch(user, launch)) {
     return (
@@ -125,9 +146,9 @@ export function LaunchFormPage() {
           <span className="mx-auto grid size-12 place-items-center rounded-lg bg-zinc-100 text-zinc-700">
             <WarningCircle size={25} weight="bold" aria-hidden="true" />
           </span>
-          <h1 className="mt-4 text-xl font-black text-zinc-950">Este lanzamiento ya no se puede editar</h1>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">Solo el creador puede editar sus lanzamientos mientras estén en estado Borrador.</p>
-          <Link to={`/launches/${id}`} className={buttonStyles({ variant: 'secondary', className: 'mt-6' })}>Volver al detalle</Link>
+          <h1 className="mt-4 text-xl font-black text-zinc-950">{t('launchForm.notEditableTitle')}</h1>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">{t('launchForm.notEditableDescription')}</p>
+          <Link to={`/launches/${id}`} className={buttonStyles({ variant: 'secondary', className: 'mt-6' })}>{t('launchForm.backToDetail')}</Link>
         </div>
       </div>
     )
@@ -136,77 +157,90 @@ export function LaunchFormPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader
-        eyebrow={isEditing ? 'Edición de borrador' : 'Nuevo registro'}
-        title={isEditing ? 'Editar lanzamiento' : 'Crear lanzamiento'}
-        description="Define la información base. Podrás agregar activos desde el detalle antes de enviarlo a revisión."
-        actions={
-          <Link to={isEditing ? `/launches/${id}` : '/launches'} className={buttonStyles({ variant: 'secondary' })}>
-            <ArrowLeft size={17} weight="bold" aria-hidden="true" />
-            Cancelar
-          </Link>
-        }
+        eyebrow={t(isEditing ? 'launchForm.editEyebrow' : 'launchForm.newEyebrow')}
+        title={t(isEditing ? 'launchForm.editTitle' : 'launchForm.createTitle')}
+        description={t('launchForm.description')}
       />
 
-      {error && <ErrorState title="No se pudo guardar" message={error.message} />}
+      {error && <ErrorState title={t('launchForm.saveErrorTitle')} message={tApiError(error, t)} />}
 
       <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-200 bg-white" noValidate>
         <div className="border-b border-zinc-200 p-5 sm:p-6">
-          <h2 className="text-base font-black text-zinc-950">Información general</h2>
-          <p className="mt-1 text-sm text-zinc-600">Estos datos aparecerán en la lista, el calendario y el detalle.</p>
+          <h2 className="text-base font-black text-zinc-950">{t('launchForm.generalInfoTitle')}</h2>
+          <p className="mt-1 text-sm text-zinc-600">{t('launchForm.generalInfoDescription')}</p>
         </div>
 
         <div className="grid gap-5 p-5 sm:p-6">
           <label className="block">
-            <span className="mb-2 block text-sm font-black text-zinc-800">Nombre del lanzamiento</span>
+            <span className="mb-2 block text-sm font-black text-zinc-800">{t('launchForm.nameLabel')}</span>
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="Ej. Ultraboost City Pack"
-              maxLength={120}
+              placeholder={t('launchForm.namePlaceholder')}
+              maxLength={CONTENT_LIMITS.launchName}
               aria-invalid={Boolean(fieldErrors.name)}
               aria-describedby={fieldErrors.name ? 'name-error' : undefined}
               className="min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10 aria-[invalid=true]:border-red-600"
             />
-            {fieldErrors.name && <p id="name-error" className="mt-1.5 text-xs font-semibold text-red-700">{fieldErrors.name}</p>}
+            {fieldErrors.name && (
+              <p id="name-error" className="mt-1.5 text-xs font-semibold text-red-700">
+                {t(fieldErrors.name.key, fieldErrors.name.values)}
+              </p>
+            )}
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-black text-zinc-800">Descripción</span>
+            <span className="mb-2 block text-sm font-black text-zinc-800">
+              {t('launchForm.descriptionLabel')}{' '}
+              <span className="font-semibold text-zinc-500">{t('common.optionalParenthetical')}</span>
+            </span>
             <textarea
               name="description"
               value={form.description}
               onChange={handleChange}
-              placeholder="Resume el producto, el objetivo y las consideraciones de lanzamiento."
+              placeholder={t('launchForm.descriptionPlaceholder')}
               rows={5}
+              maxLength={CONTENT_LIMITS.launchDescription}
               aria-invalid={Boolean(fieldErrors.description)}
               aria-describedby={fieldErrors.description ? 'description-error' : undefined}
               className="w-full resize-y rounded-lg border border-zinc-300 bg-white px-3.5 py-3 text-sm leading-6 text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10 aria-[invalid=true]:border-red-600"
             />
-            {fieldErrors.description && <p id="description-error" className="mt-1.5 text-xs font-semibold text-red-700">{fieldErrors.description}</p>}
+            {fieldErrors.description && (
+              <p id="description-error" className="mt-1.5 text-xs font-semibold text-red-700">
+                {t(fieldErrors.description.key, fieldErrors.description.values)}
+              </p>
+            )}
           </label>
 
           <div className="grid gap-5 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-sm font-black text-zinc-800">Mercado</span>
+              <span className="mb-2 block text-sm font-black text-zinc-800">{t('launchForm.marketLabel')}</span>
               <input
                 name="market"
                 value={form.market}
                 onChange={handleChange}
                 list="launch-markets"
-                placeholder="Ej. LATAM"
+                placeholder={t('launchForm.marketPlaceholder')}
+                maxLength={CONTENT_LIMITS.market}
                 aria-invalid={Boolean(fieldErrors.market)}
                 aria-describedby={fieldErrors.market ? 'market-error' : undefined}
                 className="min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10 aria-[invalid=true]:border-red-600"
               />
               <datalist id="launch-markets">
-                {COMMON_MARKETS.map((market) => <option key={market} value={market} />)}
+                {COMMON_MARKETS.map((market) => (
+                  <option key={market.value} value={market.value} label={t(market.labelKey)} />
+                ))}
               </datalist>
-              {fieldErrors.market && <p id="market-error" className="mt-1.5 text-xs font-semibold text-red-700">{fieldErrors.market}</p>}
+              {fieldErrors.market && (
+                <p id="market-error" className="mt-1.5 text-xs font-semibold text-red-700">
+                  {t(fieldErrors.market.key, fieldErrors.market.values)}
+                </p>
+              )}
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-black text-zinc-800">Fecha de lanzamiento</span>
+              <span className="mb-2 block text-sm font-black text-zinc-800">{t('launchForm.launchDateLabel')}</span>
               <input
                 type="date"
                 name="launchDate"
@@ -216,16 +250,22 @@ export function LaunchFormPage() {
                 aria-describedby={fieldErrors.launchDate ? 'date-error' : undefined}
                 className="min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-950 outline-none focus:border-zinc-950 focus:ring-2 focus:ring-zinc-950/10 aria-[invalid=true]:border-red-600"
               />
-              {fieldErrors.launchDate && <p id="date-error" className="mt-1.5 text-xs font-semibold text-red-700">{fieldErrors.launchDate}</p>}
+              {fieldErrors.launchDate && (
+                <p id="date-error" className="mt-1.5 text-xs font-semibold text-red-700">
+                  {t(fieldErrors.launchDate.key, fieldErrors.launchDate.values)}
+                </p>
+              )}
             </label>
           </div>
         </div>
 
         <div className="flex flex-col-reverse gap-2 border-t border-zinc-200 bg-zinc-50 p-5 sm:flex-row sm:justify-end sm:p-6">
-          <Link to={isEditing ? `/launches/${id}` : '/launches'} className={buttonStyles({ variant: 'secondary' })}>Cancelar</Link>
+          <Link to={isEditing ? `/launches/${id}` : '/launches'} className={buttonStyles({ variant: 'secondary' })}>{t('common.cancel')}</Link>
           <Button type="submit" disabled={isSaving}>
             <FloppyDisk size={17} weight="bold" aria-hidden="true" />
-            {isSaving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear borrador'}
+            {isSaving
+              ? t('launchForm.saving')
+              : t(isEditing ? 'launchForm.saveChanges' : 'launchForm.createDraft')}
           </Button>
         </div>
       </form>

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { RoleRoute } from './components/RoleRoute'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { CalendarPage } from './pages/CalendarPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -7,6 +8,8 @@ import { LaunchDetailPage } from './pages/LaunchDetailPage'
 import { LaunchFormPage } from './pages/LaunchFormPage'
 import { LaunchListPage } from './pages/LaunchListPage'
 import { LoginPage } from './pages/LoginPage'
+import { UserManagementPage } from './pages/UserManagementPage'
+import { USER_ROLES } from './utils/constants'
 
 export default function App() {
   return (
@@ -21,6 +24,9 @@ export default function App() {
           <Route path="launches/:id" element={<LaunchDetailPage />} />
           <Route path="launches/:id/edit" element={<LaunchFormPage />} />
           <Route path="calendar" element={<CalendarPage />} />
+          <Route element={<RoleRoute roles={USER_ROLES.ADMIN} />}>
+            <Route path="users" element={<UserManagementPage />} />
+          </Route>
         </Route>
       </Route>
 

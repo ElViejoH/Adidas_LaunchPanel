@@ -9,12 +9,12 @@ import {
 } from '../services/launchService.js'
 
 export async function getLaunches(req, res) {
-  const { launches, meta } = await listLaunches(req.query)
+  const { launches, meta } = await listLaunches(req.query, req.user)
   res.status(200).json({ data: launches, meta })
 }
 
 export async function getLaunch(req, res) {
-  const launch = await getLaunchById(req.params.id)
+  const launch = await getLaunchById(req.params.id, req.user)
   res.status(200).json({ data: launch })
 }
 
@@ -42,6 +42,6 @@ export async function updateLaunchStatus(req, res) {
 }
 
 export async function getHistory(req, res) {
-  const history = await getLaunchHistory(req.params.id)
+  const history = await getLaunchHistory(req.params.id, req.user)
   res.status(200).json({ data: history })
 }

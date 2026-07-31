@@ -51,6 +51,21 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: 'admin@adidas.com' },
+    update: {
+      name: 'Alex Admin',
+      password,
+      role: Role.ADMIN,
+    },
+    create: {
+      name: 'Alex Admin',
+      email: 'admin@adidas.com',
+      password,
+      role: Role.ADMIN,
+    },
+  });
+
   // Elimina únicamente los registros demo conocidos para que ejecutar el seed
   // varias veces no duplique datos ni afecte lanzamientos creados por el usuario.
   await prisma.launch.deleteMany({
@@ -259,7 +274,7 @@ async function main() {
     },
   });
 
-  console.log('Seed completado: 2 usuarios y 6 lanzamientos de ejemplo.');
+  console.log('Seed completado: 3 usuarios y 6 lanzamientos de ejemplo.');
 }
 
 main()

@@ -1,0 +1,2 @@
+-- SQLite stores Prisma enum values as TEXT, so adding ADMIN does not require
+-- altering the existing User table.

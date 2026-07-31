@@ -3,21 +3,22 @@ import {
   CalendarBlank,
   House,
   ListBullets,
-  Plus,
   SignOut,
+  UsersThree,
   X,
 } from '@phosphor-icons/react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useI18n } from '../hooks/useI18n'
 import { useMediaQuery } from '../hooks/useMediaQuery'
-import { canCreateLaunch } from '../utils/permissions'
+import { USER_ROLES } from '../utils/constants'
 import { BrandMark } from './BrandMark'
 import { RoleGuard } from './RoleGuard'
 
 const navItems = [
-  { to: '/', label: 'Resumen', icon: House, end: true },
-  { to: '/launches', label: 'Lanzamientos', icon: ListBullets },
-  { to: '/calendar', label: 'Calendario', icon: CalendarBlank },
+  { to: '/', labelKey: 'nav.summary', icon: House, end: true },
+  { to: '/launches', labelKey: 'nav.launches', icon: ListBullets },
+  { to: '/calendar', labelKey: 'nav.calendar', icon: CalendarBlank },
 ]
 
 const FOCUSABLE_SELECTOR = [
@@ -29,6 +30,7 @@ const FOCUSABLE_SELECTOR = [
 
 export function Sidebar({ open, onClose }) {
   const { user, logout } = useAuth()
+  const { t } = useI18n()
   const isDesktop = useMediaQuery('(min-width: 1024px)')
   const asideRef = useRef(null)
   const closeButtonRef = useRef(null)
@@ -88,7 +90,7 @@ export function Sidebar({ open, onClose }) {
   }, [isDrawerOpen, onClose])
 
   const navClassName = ({ isActive }) =>
-    `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-zinc-100 ${
+    `font-display flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-zinc-100 ${
       isActive ? 'bg-zinc-100 text-zinc-950' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50'
     }`
 
@@ -99,14 +101,14 @@ export function Sidebar({ open, onClose }) {
           type="button"
           className="fixed inset-0 z-30 bg-zinc-950/50 lg:hidden"
           onClick={onClose}
-          aria-label="Cerrar navegación"
+          aria-label={t('nav.closeNavigation')}
         />
       )}
       <aside
         ref={asideRef}
         role={isDrawerOpen ? 'dialog' : undefined}
         aria-modal={isDrawerOpen ? 'true' : undefined}
-        aria-label={isDrawerOpen ? 'Menú principal' : undefined}
+        aria-label={isDrawerOpen ? t('nav.mainMenu') : undefined}
         aria-hidden={isHidden ? 'true' : undefined}
         inert={isHidden}
         tabIndex={-1}
@@ -121,28 +123,29 @@ export function Sidebar({ open, onClose }) {
             type="button"
             onClick={onClose}
             className="grid size-9 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-100 lg:hidden"
-            aria-label="Cerrar menú"
+            aria-label={t('nav.closeMenu')}
           >
             <X size={19} weight="bold" />
           </button>
         </div>
 
-        <nav className="mt-8 flex-1" aria-label="Navegación principal">
-          <p className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-zinc-400">Workspace</p>
+        <nav className="mt-8 flex-1" aria-label={t('nav.mainNavigation')}>
+          <p className="font-display mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-zinc-400">{t('nav.workspace')}</p>
           <div className="space-y-1">
-            {navItems.map(({ to, label, icon: Icon, end }) => (
+            {navItems.map(({ to, labelKey, icon: Icon, end }) => (
               <NavLink key={to} to={to} end={end} onClick={onClose} className={navClassName}>
                 <Icon size={19} weight="bold" aria-hidden="true" />
-                {label}
+                {t(labelKey)}
               </NavLink>
             ))}
           </div>
 
-          <RoleGuard roles="CREATOR" condition={canCreateLaunch(user)}>
+          <RoleGuard roles={USER_ROLES.ADMIN}>
             <div className="mt-6 border-t border-zinc-800 pt-5">
-              <NavLink to="/launches/new" onClick={onClose} className={navClassName}>
-                <Plus size={19} weight="bold" aria-hidden="true" />
-                Nuevo lanzamiento
+              <p className="font-display mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">{t('nav.administration')}</p>
+              <NavLink to="/users" onClick={onClose} className={navClassName}>
+                <UsersThree size={19} weight="bold" aria-hidden="true" />
+                {t('nav.usersAndPermissions')}
               </NavLink>
             </div>
           </RoleGuard>
@@ -151,7 +154,7 @@ export function Sidebar({ open, onClose }) {
         <div className="border-t border-zinc-800 pt-4">
           <div className="mb-3 flex items-center gap-3 px-2">
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-zinc-800 text-xs font-black text-zinc-100">
-              {user?.name?.slice(0, 2).toUpperCase() || 'US'}
+              {user?.name?.slice(0, 2).toUpperCase() || t('common.userInitialsFallback')}
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-black text-zinc-100">{user?.name}</p>
@@ -161,10 +164,10 @@ export function Sidebar({ open, onClose }) {
           <button
             type="button"
             onClick={logout}
-            className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-bold text-zinc-400 outline-none hover:bg-zinc-900 hover:text-zinc-50 focus-visible:ring-2 focus-visible:ring-zinc-100"
+            className="font-display flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-bold text-zinc-400 outline-none hover:bg-zinc-900 hover:text-zinc-50 focus-visible:ring-2 focus-visible:ring-zinc-100"
           >
             <SignOut size={18} weight="bold" aria-hidden="true" />
-            Cerrar sesión
+            {t('nav.logout')}
           </button>
         </div>
       </aside>

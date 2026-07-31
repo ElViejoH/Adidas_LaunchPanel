@@ -1,11 +1,13 @@
 import prisma from '../prisma/client.js'
 import { AppError } from '../utils/AppError.js'
 import {
+  CONTENT_LIMITS,
   ensureObject,
   LAUNCH_STATUSES,
   parsePositiveId,
   requiredString,
   USER_ROLES,
+  VALID_ASSET_TYPES,
   validateHttpUrl,
 } from '../utils/validation.js'
 
@@ -26,12 +28,17 @@ function assertAssetPermission(actor, launch) {
     )
   }
 
-  if (launch.status !== LAUNCH_STATUSES.DRAFT) {
+  const editableStatuses = [
+    LAUNCH_STATUSES.DRAFT,
+    LAUNCH_STATUSES.IN_REVIEW,
+  ]
+
+  if (!editableStatuses.includes(launch.status)) {
     throw new AppError(
-      'Los assets solo pueden modificarse mientras el lanzamiento está en DRAFT.',
+      'Los assets solo pueden modificarse mientras el lanzamiento está en DRAFT o IN_REVIEW.',
       409,
-      'DRAFT_REQUIRED',
-      { currentStatus: launch.status },
+      'EDITABLE_STATUS_REQUIRED',
+      { currentStatus: launch.status, allowedStatuses: editableStatuses },
     )
   }
 }
@@ -39,7 +46,21 @@ function assertAssetPermission(actor, launch) {
 export async function addAsset(rawLaunchId, payload, actor) {
   const launchId = parsePositiveId(rawLaunchId, 'launchId')
   const body = ensureObject(payload)
-  const launch = await prisma.launch.findUnique({ where: { id: launchId } })
+  const name = requiredString(body.name, 'name', CONTENT_LIMITS.assetName)
+  const type = requiredString(body.type, 'type', 20)
+  const url = validateHttpUrl(body.url)
+
+  if (!VALID_ASSET_TYPES.includes(type)) {
+    throw new AppError('El tipo de asset no es válido.', 400, 'INVALID_ASSET_TYPE', {
+      field: 'type',
+      allowedValues: VALID_ASSET_TYPES,
+    })
+  }
+
+  const launch = await prisma.launch.findUnique({
+    where: { id: launchId },
+    include: { _count: { select: { assets: true } } },
+  })
 
   if (!launch) {
     throw new AppError('El lanzamiento solicitado no existe.', 404, 'LAUNCH_NOT_FOUND')
@@ -47,12 +68,21 @@ export async function addAsset(rawLaunchId, payload, actor) {
 
   assertAssetPermission(actor, launch)
 
+  if (launch._count.assets >= CONTENT_LIMITS.assetsPerLaunch) {
+    throw new AppError(
+      `Cada lanzamiento admite hasta ${CONTENT_LIMITS.assetsPerLaunch} assets.`,
+      409,
+      'ASSET_LIMIT_REACHED',
+      { maxAssets: CONTENT_LIMITS.assetsPerLaunch },
+    )
+  }
+
   return prisma.asset.create({
     data: {
       launchId,
-      name: requiredString(body.name, 'name', 160),
-      type: requiredString(body.type, 'type', 80),
-      url: validateHttpUrl(body.url),
+      name,
+      type,
+      url,
     },
   })
 }

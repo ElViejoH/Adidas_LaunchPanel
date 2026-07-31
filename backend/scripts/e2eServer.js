@@ -55,6 +55,18 @@ async function main() {
         password,
         role: Role.APPROVER,
       },
+      {
+        name: 'E2E Admin',
+        email: 'admin.e2e@adidas.test',
+        password,
+        role: Role.ADMIN,
+      },
+      {
+        name: 'E2E Managed User',
+        email: 'managed.e2e@adidas.test',
+        password,
+        role: Role.CREATOR,
+      },
     ],
   })
 

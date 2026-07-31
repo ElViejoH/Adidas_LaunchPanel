@@ -13,7 +13,7 @@ export function canCreateLaunch(user) {
 export function canEditLaunch(user, launch) {
   return (
     user?.role === USER_ROLES.CREATOR &&
-    launch?.status === LAUNCH_STATUSES.DRAFT &&
+    [LAUNCH_STATUSES.DRAFT, LAUNCH_STATUSES.IN_REVIEW].includes(launch?.status) &&
     isLaunchOwner(user, launch)
   )
 }

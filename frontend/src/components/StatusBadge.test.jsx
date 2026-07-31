@@ -14,10 +14,22 @@ describe('StatusBadge', () => {
   })
 
   test.each([
-    ['CHANGES_REQUESTED', 'Cambios solicitados'],
-    ['REJECTED', 'Rechazado'],
-  ])('representa el resultado de revisión %s', (status, label) => {
+    ['DRAFT', 'Borrador', 'bg-zinc-100'],
+    ['IN_REVIEW', 'En revisión', 'border-orange-600'],
+    ['CHANGES_REQUESTED', 'Cambios solicitados', 'border-yellow-500'],
+    ['APPROVED', 'Aprobado', 'border-emerald-700'],
+    ['PUBLISHED', 'Publicado', 'border-blue-700'],
+    ['REJECTED', 'Rechazado', 'border-red-700'],
+  ])('representa el estado %s con su color semántico', (status, label, colorClass) => {
     render(<StatusBadge status={status} />)
-    expect(screen.getByText(label)).toBeInTheDocument()
+    expect(screen.getByText(label)).toHaveClass(colorClass)
   })
+
+  test.each(['IN_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'])(
+    'mantiene fondo blanco en el estado %s',
+    (status) => {
+      const { container } = render(<StatusBadge status={status} />)
+      expect(container.firstChild).toHaveClass('bg-white')
+    },
+  )
 })

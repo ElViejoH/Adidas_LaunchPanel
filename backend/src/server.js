@@ -40,25 +40,6 @@ app.get('/api/health', async (_req, res, next) => {
 })
 app.use('/api', apiRoutes)
 
-if (process.env.SERVE_FRONTEND === 'true') {
-  const frontendDist = resolve(
-    process.env.FRONTEND_DIST_PATH ||
-      fileURLToPath(new URL('../../frontend/dist/', import.meta.url)),
-  )
-  const frontendIndex = resolve(frontendDist, 'index.html')
-
-  app.use(express.static(frontendDist))
-  app.get('*', (req, res, next) => {
-    if (req.path === '/api' || req.path.startsWith('/api/')) {
-      next()
-      return
-    }
-    res.sendFile(frontendIndex, (error) => {
-      if (error) next(error)
-    })
-  })
-}
-
 app.use(notFoundHandler)
 app.use(errorHandler)
 

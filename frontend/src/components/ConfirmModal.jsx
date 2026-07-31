@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { WarningCircle, X } from '@phosphor-icons/react'
+import { useI18n } from '../hooks/useI18n'
 import { Button } from './Button'
 
 const FOCUSABLE_SELECTOR = [
@@ -16,14 +17,15 @@ export function ConfirmModal({
   isOpen,
   title,
   description,
-  confirmLabel = 'Confirmar',
-  cancelLabel = 'Cancelar',
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   onClose,
   isLoading = false,
   tone = 'default',
   children,
 }) {
+  const { t } = useI18n()
   const titleId = useId()
   const descriptionId = useId()
   const dialogRef = useRef(null)
@@ -107,7 +109,7 @@ export function ConfirmModal({
       <button
         type="button"
         className="absolute inset-0 cursor-default"
-        aria-label="Cerrar diálogo"
+        aria-label={t('common.closeDialog')}
         tabIndex={-1}
         onClick={() => !isLoading && onClose()}
       />
@@ -144,7 +146,7 @@ export function ConfirmModal({
             onClick={onClose}
             disabled={isLoading}
             className="grid size-9 shrink-0 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 disabled:opacity-50"
-            aria-label="Cerrar"
+            aria-label={t('common.close')}
           >
             <X size={18} weight="bold" />
           </button>
@@ -154,10 +156,10 @@ export function ConfirmModal({
 
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="secondary" onClick={onClose} disabled={isLoading}>
-            {cancelLabel}
+            {cancelLabel ?? t('common.cancel')}
           </Button>
           <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? 'Procesando...' : confirmLabel}
+            {isLoading ? t('common.processing') : confirmLabel ?? t('common.confirm')}
           </Button>
         </div>
       </section>

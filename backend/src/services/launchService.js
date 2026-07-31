@@ -1,6 +1,7 @@
 import prisma from '../prisma/client.js'
 import { AppError } from '../utils/AppError.js'
 import {
+  CONTENT_LIMITS,
   ensureObject,
   LAUNCH_STATUSES,
   optionalString,
@@ -48,6 +49,11 @@ const statusesRequiringComment = new Set([
   LAUNCH_STATUSES.REJECTED,
 ])
 
+const editableStatuses = Object.freeze([
+  LAUNCH_STATUSES.DRAFT,
+  LAUNCH_STATUSES.IN_REVIEW,
+])
+
 function parsePaginationValue(value, field, fallback) {
   if (value === undefined || value === null || value === '') return fallback
 
@@ -65,9 +71,14 @@ function buildLaunchData(payload) {
   const body = ensureObject(payload)
 
   return {
-    name: requiredString(body.name, 'name', 160),
-    description: optionalString(body.description, 'description', 3000, ''),
-    market: requiredString(body.market, 'market', 100),
+    name: requiredString(body.name, 'name', CONTENT_LIMITS.launchName),
+    description: optionalString(
+      body.description,
+      'description',
+      CONTENT_LIMITS.launchDescription,
+      '',
+    ),
+    market: requiredString(body.market, 'market', CONTENT_LIMITS.market),
     launchDate: parseDateValue(body.launchDate, 'launchDate', { dateOnlyAtNoon: true }),
   }
 }
@@ -94,14 +105,26 @@ function assertOwner(actor, launch) {
   }
 }
 
-function assertDraft(launch) {
-  if (launch.status !== LAUNCH_STATUSES.DRAFT) {
+function assertEditableStatus(launch) {
+  if (!editableStatuses.includes(launch.status)) {
     throw new AppError(
-      'Esta acción solo está disponible mientras el lanzamiento está en DRAFT.',
+      'Esta acción solo está disponible mientras el lanzamiento está en DRAFT o IN_REVIEW.',
       409,
-      'DRAFT_REQUIRED',
-      { currentStatus: launch.status },
+      'EDITABLE_STATUS_REQUIRED',
+      { currentStatus: launch.status, allowedStatuses: editableStatuses },
     )
+  }
+}
+
+function draftVisibilityWhere(actor) {
+  return {
+    OR: [
+      { status: { not: LAUNCH_STATUSES.DRAFT } },
+      {
+        status: LAUNCH_STATUSES.DRAFT,
+        creatorId: actor?.id ?? -1,
+      },
+    ],
   }
 }
 
@@ -121,6 +144,17 @@ function assertTransitionPermission(actor, launch) {
       'Solo un usuario APPROVER puede decidir sobre lanzamientos en revisión o publicarlos.',
       403,
       'FORBIDDEN',
+    )
+  }
+
+  if (
+    [LAUNCH_STATUSES.IN_REVIEW, LAUNCH_STATUSES.APPROVED].includes(launch.status) &&
+    actor?.id === launch.creatorId
+  ) {
+    throw new AppError(
+      'No puedes aprobar ni publicar un lanzamiento que creaste.',
+      403,
+      'SELF_APPROVAL_FORBIDDEN',
     )
   }
 }
@@ -184,17 +218,21 @@ function parseListFilters(query = {}) {
   return { search, market, status, startDate, endDate, page, limit, sortBy, sortOrder }
 }
 
-export async function listLaunches(query = {}) {
+export async function listLaunches(query = {}, actor) {
   const { search, market, status, startDate, endDate, page, limit, sortBy, sortOrder } =
     parseListFilters(query)
-  const where = {}
+  const where = {
+    AND: [draftVisibilityWhere(actor)],
+  }
 
   if (search) {
-    where.OR = [
-      { name: { contains: search } },
-      { description: { contains: search } },
-      { market: { contains: search } },
-    ]
+    where.AND.push({
+      OR: [
+        { name: { contains: search } },
+        { description: { contains: search } },
+        { market: { contains: search } },
+      ],
+    })
   }
   if (market) where.market = market
   if (status) where.status = status
@@ -230,10 +268,13 @@ export async function listLaunches(query = {}) {
   }
 }
 
-export async function getLaunchById(rawId) {
+export async function getLaunchById(rawId, actor) {
   const id = parsePositiveId(rawId, 'id')
-  const launch = await prisma.launch.findUnique({
-    where: { id },
+  const launch = await prisma.launch.findFirst({
+    where: {
+      id,
+      ...draftVisibilityWhere(actor),
+    },
     include: launchDetailInclude,
   })
 
@@ -267,14 +308,14 @@ export async function updateLaunch(rawId, payload, actor) {
   }
 
   assertOwner(actor, current)
-  assertDraft(current)
+  assertEditableStatus(current)
   const data = buildLaunchData(payload)
 
   const result = await prisma.launch.updateMany({
     where: {
       id,
       creatorId: actor.id,
-      status: LAUNCH_STATUSES.DRAFT,
+      status: { in: editableStatuses },
     },
     data,
   })
@@ -287,7 +328,7 @@ export async function updateLaunch(rawId, payload, actor) {
     )
   }
 
-  return getLaunchById(id)
+  return getLaunchById(id, actor)
 }
 
 export async function deleteLaunch(rawId, actor) {
@@ -299,13 +340,13 @@ export async function deleteLaunch(rawId, actor) {
   }
 
   assertOwner(actor, current)
-  assertDraft(current)
+  assertEditableStatus(current)
 
   const result = await prisma.launch.deleteMany({
     where: {
       id,
       creatorId: actor.id,
-      status: LAUNCH_STATUSES.DRAFT,
+      status: { in: editableStatuses },
     },
   })
 
@@ -398,10 +439,13 @@ export async function changeLaunchStatus(rawId, payload, actor) {
   return updated
 }
 
-export async function getLaunchHistory(rawId) {
+export async function getLaunchHistory(rawId, actor) {
   const id = parsePositiveId(rawId, 'id')
-  const exists = await prisma.launch.findUnique({
-    where: { id },
+  const exists = await prisma.launch.findFirst({
+    where: {
+      id,
+      ...draftVisibilityWhere(actor),
+    },
     select: { id: true },
   })
 

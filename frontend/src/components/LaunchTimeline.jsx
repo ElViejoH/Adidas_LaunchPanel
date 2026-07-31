@@ -1,9 +1,11 @@
 import { Check, ClockCounterClockwise } from '@phosphor-icons/react'
+import { useI18n } from '../hooks/useI18n'
 import { LAUNCH_STATUSES, STATUS_CONFIG, STATUS_ORDER } from '../utils/constants'
 import { formatDateTime } from '../utils/date'
 import { StatusBadge } from './StatusBadge'
 
 export function LaunchTimeline({ currentStatus, history = [] }) {
+  const { language, t } = useI18n()
   const reviewOutcome = [
     LAUNCH_STATUSES.CHANGES_REQUESTED,
     LAUNCH_STATUSES.REJECTED,
@@ -16,7 +18,7 @@ export function LaunchTimeline({ currentStatus, history = [] }) {
 
   return (
     <div>
-      <ol className="grid grid-cols-4 gap-1" aria-label="Progreso del lanzamiento">
+      <ol className="grid grid-cols-4 gap-1" aria-label={t('timeline.progressAria')}>
         {STATUS_ORDER.map((status, index) => {
           const reached = index <= currentIndex
           const active = index === currentIndex
@@ -36,7 +38,7 @@ export function LaunchTimeline({ currentStatus, history = [] }) {
                 {reached ? <Check size={15} weight="bold" /> : <span className="text-xs font-black">{index + 1}</span>}
               </span>
               <span className={`mt-2 block truncate text-[10px] font-extrabold uppercase tracking-[0.04em] ${reached ? 'text-zinc-950' : 'text-zinc-400'}`}>
-                {STATUS_CONFIG[status].shortLabel}
+                {t(STATUS_CONFIG[status].shortLabelKey)}
               </span>
             </li>
           )
@@ -46,23 +48,23 @@ export function LaunchTimeline({ currentStatus, history = [] }) {
       {reviewOutcome && (
         <div className="mt-5 flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-3">
           <span className="text-xs font-black uppercase tracking-[0.08em] text-zinc-500">
-            Resultado de revisión
+            {t('timeline.reviewOutcome')}
           </span>
           <StatusBadge status={reviewOutcome} />
         </div>
       )}
 
       <div className="mt-7 border-t border-zinc-200 pt-5">
-        <h3 className="text-sm font-black text-zinc-950">Historial de cambios</h3>
+        <h3 className="text-sm font-black text-zinc-950">{t('timeline.historyTitle')}</h3>
         {sortedHistory.length === 0 ? (
           <div className="mt-4 flex items-start gap-3 rounded-lg bg-zinc-50 p-4 text-sm text-zinc-600">
             <ClockCounterClockwise className="mt-0.5 shrink-0" size={19} weight="bold" aria-hidden="true" />
-            <p>Este lanzamiento todavía no registra transiciones de estado.</p>
+            <p>{t('timeline.emptyHistory')}</p>
           </div>
         ) : (
           <ol className="mt-4 space-y-0">
             {sortedHistory.map((event, index) => {
-              const actor = event.changedBy?.name || event.changedByUser?.name || 'Usuario del equipo'
+              const actor = event.changedBy?.name || event.changedByUser?.name || t('timeline.teamUserFallback')
               return (
                 <li key={event.id ?? `${event.newStatus}-${event.createdAt}-${index}`} className="relative flex gap-3 pb-5 last:pb-0">
                   {index < sortedHistory.length - 1 && (
@@ -74,10 +76,10 @@ export function LaunchTimeline({ currentStatus, history = [] }) {
                   <div className="min-w-0 pt-0.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge status={event.newStatus} compact />
-                      <span className="text-xs font-semibold text-zinc-500">{formatDateTime(event.createdAt)}</span>
+                      <span className="text-xs font-semibold text-zinc-500">{formatDateTime(event.createdAt, language)}</span>
                     </div>
                     <p className="mt-1.5 text-sm text-zinc-700">
-                      Cambio realizado por <strong className="font-black text-zinc-950">{actor}</strong>.
+                      {t('timeline.changedBy', { actor })}
                     </p>
                     {event.comment && (
                       <p className="mt-2 rounded-lg bg-zinc-50 px-3 py-2 text-sm leading-6 text-zinc-600">

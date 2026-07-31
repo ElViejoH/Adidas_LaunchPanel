@@ -12,6 +12,7 @@ import {
 const creator = { id: 10, role: USER_ROLES.CREATOR }
 const otherCreator = { id: 20, role: USER_ROLES.CREATOR }
 const approver = { id: 30, role: USER_ROLES.APPROVER }
+const admin = { id: 40, role: USER_ROLES.ADMIN }
 
 describe('permisos de lanzamientos', () => {
   test('reconoce al propietario con creatorId directo o anidado', () => {
@@ -20,9 +21,10 @@ describe('permisos de lanzamientos', () => {
     expect(isLaunchOwner(otherCreator, { creatorId: 10 })).toBe(false)
   })
 
-  test('solo el creador propietario administra su borrador', () => {
+  test('solo el creador propietario administra su borrador o lanzamiento en revisión', () => {
     const draft = { creatorId: creator.id, status: LAUNCH_STATUSES.DRAFT }
     const inReview = { ...draft, status: LAUNCH_STATUSES.IN_REVIEW }
+    const approved = { ...draft, status: LAUNCH_STATUSES.APPROVED }
 
     expect(canCreateLaunch(creator)).toBe(true)
     expect(canCreateLaunch(approver)).toBe(false)
@@ -30,7 +32,11 @@ describe('permisos de lanzamientos', () => {
     expect(canDeleteLaunch(creator, draft)).toBe(true)
     expect(canManageAssets(creator, draft)).toBe(true)
     expect(canEditLaunch(otherCreator, draft)).toBe(false)
-    expect(canEditLaunch(creator, inReview)).toBe(false)
+    expect(canEditLaunch(creator, inReview)).toBe(true)
+    expect(canDeleteLaunch(creator, inReview)).toBe(true)
+    expect(canManageAssets(creator, inReview)).toBe(true)
+    expect(canEditLaunch(otherCreator, inReview)).toBe(false)
+    expect(canEditLaunch(creator, approved)).toBe(false)
   })
 
   test('calcula únicamente la siguiente transición permitida por rol', () => {
@@ -62,5 +68,14 @@ describe('permisos de lanzamientos', () => {
     ])
     expect(getAllowedStatusTransitions(otherCreator, changesRequested)).toEqual([])
     expect(getAllowedStatusTransitions(approver, rejected)).toEqual([])
+  })
+
+  test('ADMIN consulta el panel pero no hereda acciones operativas', () => {
+    const ownDraft = { creatorId: admin.id, status: LAUNCH_STATUSES.DRAFT }
+    expect(canCreateLaunch(admin)).toBe(false)
+    expect(canEditLaunch(admin, ownDraft)).toBe(false)
+    expect(canDeleteLaunch(admin, ownDraft)).toBe(false)
+    expect(canManageAssets(admin, ownDraft)).toBe(false)
+    expect(getAllowedStatusTransitions(admin, ownDraft)).toEqual([])
   })
 })

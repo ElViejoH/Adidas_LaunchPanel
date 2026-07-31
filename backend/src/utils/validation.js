@@ -3,7 +3,10 @@ import { AppError } from './AppError.js'
 export const USER_ROLES = Object.freeze({
   CREATOR: 'CREATOR',
   APPROVER: 'APPROVER',
+  ADMIN: 'ADMIN',
 })
+
+export const VALID_USER_ROLES = Object.freeze(Object.values(USER_ROLES))
 
 export const LAUNCH_STATUSES = Object.freeze({
   DRAFT: 'DRAFT',
@@ -15,6 +18,24 @@ export const LAUNCH_STATUSES = Object.freeze({
 })
 
 export const VALID_LAUNCH_STATUSES = Object.freeze(Object.values(LAUNCH_STATUSES))
+
+export const ASSET_TYPES = Object.freeze({
+  IMAGE: 'IMAGE',
+  VIDEO: 'VIDEO',
+  DOCUMENT: 'DOCUMENT',
+  COPY: 'COPY',
+  OTHER: 'OTHER',
+})
+
+export const VALID_ASSET_TYPES = Object.freeze(Object.values(ASSET_TYPES))
+
+export const CONTENT_LIMITS = Object.freeze({
+  launchName: 120,
+  launchDescription: 2000,
+  market: 80,
+  assetName: 120,
+  assetsPerLaunch: 10,
+})
 
 export function ensureObject(value, label = 'El cuerpo de la solicitud') {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {

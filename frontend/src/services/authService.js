@@ -9,4 +9,9 @@ export const authService = {
     })
     return response?.data ?? response
   },
+
+  async getCurrentUser(token) {
+    const response = await apiRequest('/auth/me', { token })
+    return response?.data ?? response
+  },
 }

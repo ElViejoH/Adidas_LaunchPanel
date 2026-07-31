@@ -27,9 +27,9 @@ test('creador y aprobador completan el flujo crítico de publicación', async ({
   await expect(page).toHaveURL(/\/login$/)
 
   await login(page, 'creator.e2e@adidas.test')
-  await expect(page).toHaveURL(/\/launches$/)
+  await expect(page).toHaveURL('/')
 
-  await page.getByRole('link', { name: 'Nuevo lanzamiento' }).first().click()
+  await page.getByRole('link', { name: 'Crear lanzamiento' }).click()
   await page.getByLabel('Nombre del lanzamiento').fill(launchName)
   await page.getByLabel('Descripción').fill('Flujo completo validado por Playwright.')
   await page.getByLabel('Mercado').fill('Colombia')

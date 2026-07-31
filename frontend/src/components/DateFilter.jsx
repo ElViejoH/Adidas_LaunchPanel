@@ -1,8 +1,12 @@
+import { useI18n } from '../hooks/useI18n'
+
 export function DateFilter({ from, to, onFromChange, onToChange }) {
+  const { t } = useI18n()
+
   return (
     <div className="grid grid-cols-2 gap-2">
       <label className="block min-w-0">
-        <span className="mb-1.5 block text-xs font-bold text-zinc-700">Desde</span>
+        <span className="mb-1.5 block text-xs font-bold text-zinc-700">{t('filters.dateFrom')}</span>
         <input
           type="date"
           value={from}
@@ -12,7 +16,7 @@ export function DateFilter({ from, to, onFromChange, onToChange }) {
         />
       </label>
       <label className="block min-w-0">
-        <span className="mb-1.5 block text-xs font-bold text-zinc-700">Hasta</span>
+        <span className="mb-1.5 block text-xs font-bold text-zinc-700">{t('filters.dateTo')}</span>
         <input
           type="date"
           value={to}

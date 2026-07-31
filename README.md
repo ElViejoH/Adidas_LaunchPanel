@@ -9,7 +9,8 @@ Aplicación web interna para organizar lanzamientos de producto desde su creaci�
 - Registro auditable de cada transición de estado.
 - Gestión de assets asociados a un lanzamiento.
 - Vistas conectadas de dashboard, lista, detalle, formulario y calendario.
-- Dos roles de demostración: creador y aprobador.
+- Tres roles de demostración: creador, aprobador y administrador.
+- Interfaz completa en español e inglés con preferencia persistente.
 - Base SQLite y datos semilla listos para desarrollo local.
 
 ## Plan técnico
@@ -62,6 +63,7 @@ adidas-launch-panel/
 │   │   ├── services/
 │   │   ├── context/
 │   │   ├── hooks/
+│   │   ├── i18n/
 │   │   ├── utils/
 │   │   ├── styles/
 │   │   ├── App.jsx
@@ -91,17 +93,18 @@ adidas-launch-panel/
 | Ruta | Responsabilidad |
 | --- | --- |
 | `frontend/src/components/` | Piezas reutilizables: navegación, tarjetas, tabla, filtros, badges, timeline y modales. |
-| `frontend/src/pages/` | Pantallas de login, dashboard, listado, detalle, formulario y calendario. |
+| `frontend/src/pages/` | Pantallas de login, dashboard, listado, detalle, formulario, calendario y administración de usuarios. |
 | `frontend/src/layouts/` | Estructura compartida del dashboard con sidebar y navbar. |
-| `frontend/src/services/` | Cliente HTTP y funciones para consumir autenticación, lanzamientos y assets. |
-| `frontend/src/context/` | Estado global de autenticación: usuario, token, rol y ciclo de sesión. |
+| `frontend/src/services/` | Cliente HTTP y funciones para consumir autenticación, lanzamientos, assets y usuarios. |
+| `frontend/src/context/` | Estado global de autenticación e idioma activo. |
 | `frontend/src/hooks/` | Hooks para reutilizar acceso a contexto y lógica de datos. |
+| `frontend/src/i18n/` | Catálogos ES/EN, traducción, pluralización y mensajes de error localizados. |
 | `frontend/src/utils/` | Formateo de fechas, etiquetas y otras funciones puras. |
 | `frontend/src/styles/` | Estilos globales y entrada de Tailwind CSS. |
 | `frontend/src/App.jsx` | Enrutamiento principal, rutas privadas y composición de vistas. |
 | `frontend/src/main.jsx` | Punto de montaje de React y proveedores globales. |
 
-Las rutas principales de la interfaz son `/login`, `/`, `/launches`, `/launches/new`, `/launches/:id`, `/launches/:id/edit` y `/calendar`. Todas excepto `/login` requieren una sesión válida; las rutas de creación y edición aplican además los permisos de rol y estado.
+Las rutas principales de la interfaz son `/login`, `/`, `/launches`, `/launches/new`, `/launches/:id`, `/launches/:id/edit`, `/calendar` y `/users`. Todas excepto `/login` requieren una sesión válida; `/users` es exclusiva de `ADMIN` y las rutas de creación y edición aplican además los permisos de rol y estado.
 
 ## Modelo de datos
 
@@ -112,7 +115,7 @@ Las rutas principales de la interfaz son `/login`, `/`, `/launches`, `/launches/
 | `Asset` | `id`, `launchId`, `name`, `type`, `url`, `createdAt` | Pertenece a un lanzamiento. |
 | `StatusHistory` | `id`, `launchId`, `previousStatus`, `newStatus`, `changedById`, `comment`, `createdAt` | Relaciona un lanzamiento con el usuario que realizó la transición. |
 
-Los roles válidos son `CREATOR` y `APPROVER`. Los estados válidos son `DRAFT`, `IN_REVIEW`, `CHANGES_REQUESTED`, `APPROVED`, `PUBLISHED` y `REJECTED`.
+Los roles válidos son `CREATOR`, `APPROVER` y `ADMIN`. Los estados válidos son `DRAFT`, `IN_REVIEW`, `CHANGES_REQUESTED`, `APPROVED`, `PUBLISHED` y `REJECTED`.
 
 ## Estados y permisos
 
@@ -122,18 +125,19 @@ DRAFT ──enviar revisión──> IN_REVIEW ──aprobar──> APPROVED ─�
                                └──rechazar──────────> REJECTED
 ```
 
-| Acción | CREATOR | APPROVER |
-| --- | --- | --- |
-| Consultar lanzamientos, detalle e historial | Sí | Sí |
-| Crear un lanzamiento | Sí | No |
-| Editar un lanzamiento | Solo uno propio en `DRAFT` | No |
-| Eliminar un lanzamiento | Solo uno propio en `DRAFT` | No |
-| Enviar a revisión | `DRAFT → IN_REVIEW` | No |
-| Solicitar cambios | No | `IN_REVIEW → CHANGES_REQUESTED`, con comentario obligatorio |
-| Reabrir para corregir | `CHANGES_REQUESTED → DRAFT`, solo el propietario | No |
-| Rechazar | No | `IN_REVIEW → REJECTED`, con comentario obligatorio |
-| Aprobar | No | `IN_REVIEW → APPROVED` |
-| Publicar | No | `APPROVED → PUBLISHED` |
+| Acción | CREATOR | APPROVER | ADMIN |
+| --- | --- | --- | --- |
+| Consultar lanzamientos, detalle e historial | Todos los no borradores y sus propios borradores | Todos excepto borradores | Todos excepto borradores |
+| Crear un lanzamiento | Sí | No | No |
+| Editar un lanzamiento | Solo uno propio en `DRAFT` o `IN_REVIEW` | No | No |
+| Eliminar un lanzamiento | Solo uno propio en `DRAFT` o `IN_REVIEW` | No | No |
+| Enviar a revisión | `DRAFT → IN_REVIEW` | No | No |
+| Solicitar cambios | No | `IN_REVIEW → CHANGES_REQUESTED`, con comentario obligatorio | No |
+| Reabrir para corregir | `CHANGES_REQUESTED → DRAFT`, solo el propietario | No | No |
+| Rechazar | No | `IN_REVIEW → REJECTED`, con comentario obligatorio | No |
+| Aprobar | No | `IN_REVIEW → APPROVED` | No |
+| Publicar | No | `APPROVED → PUBLISHED` | No |
+| Listar usuarios y asignar roles | No | No | Sí |
 
 No se permiten saltos ni retrocesos fuera del grafo definido. `REJECTED` y `PUBLISHED` son terminales. Cada transición se ejecuta de forma transaccional y crea un registro en `StatusHistory` con el usuario responsable; el comentario es obligatorio para solicitar cambios o rechazar y opcional en los demás movimientos. La interfaz oculta las acciones no disponibles, pero la API vuelve a validar todos los permisos.
 
@@ -148,15 +152,18 @@ Authorization: Bearer <token>
 | Método | Ruta | Descripción | Acceso |
 | --- | --- | --- | --- |
 | `POST` | `/api/auth/login` | Inicia sesión y devuelve token y usuario. | Público |
-| `GET` | `/api/launches` | Lista lanzamientos y aplica filtros. | Autenticado |
-| `GET` | `/api/launches/:id` | Obtiene detalle, creador, assets e historial. | Autenticado |
+| `GET` | `/api/auth/me` | Devuelve el usuario y rol efectivos de la sesión. | Autenticado |
+| `GET` | `/api/launches` | Lista lanzamientos y aplica filtros; los borradores solo aparecen para su creador. | Autenticado |
+| `GET` | `/api/launches/:id` | Obtiene detalle, creador, assets e historial; un borrador solo es accesible para su creador. | Autenticado |
 | `POST` | `/api/launches` | Crea un lanzamiento en `DRAFT`. | CREATOR |
-| `PUT` | `/api/launches/:id` | Edita un lanzamiento propio en `DRAFT`. | CREATOR |
-| `DELETE` | `/api/launches/:id` | Elimina un lanzamiento propio en `DRAFT`. | CREATOR |
+| `PUT` | `/api/launches/:id` | Edita un lanzamiento propio en `DRAFT` o `IN_REVIEW`. | CREATOR |
+| `DELETE` | `/api/launches/:id` | Elimina un lanzamiento propio en `DRAFT` o `IN_REVIEW`. | CREATOR |
 | `PATCH` | `/api/launches/:id/status` | Ejecuta una transición válida del grafo de estados. | Según transición |
 | `GET` | `/api/launches/:id/history` | Lista el historial cronológico de estados. | Autenticado |
 | `POST` | `/api/launches/:id/assets` | Asocia un asset al lanzamiento. | Según permisos del lanzamiento |
 | `DELETE` | `/api/assets/:id` | Elimina un asset asociado. | Según permisos del lanzamiento |
+| `GET` | `/api/users` | Lista usuarios y permite filtrar por nombre, correo o rol. | ADMIN |
+| `PATCH` | `/api/users/:id/role` | Asigna un rol a otra cuenta. | ADMIN |
 
 `GET /api/launches` acepta parámetros de consulta para texto, mercado, estado y rango de fechas. La aplicación web utiliza esta misma ruta como fuente para el listado, el dashboard y el calendario.
 
@@ -232,6 +239,10 @@ npm run dev
 
 La interfaz queda disponible en `http://localhost:5173`.
 
+El selector `ES / EN` permanece disponible en la esquina superior derecha del login y del panel. La preferencia se conserva al recargar y al cerrar sesión.
+
+Para presentar el proyecto, consulta la [guía breve de demostración](docs/demo-guide.md). Incluye el recorrido recomendado, las cuentas por rol y capturas de las vistas principales. El resultado de la revisión de escritorio y móvil está en [QA visual final](docs/qa-visual.md).
+
 Variable de `frontend/.env`:
 
 | Variable | Valor local sugerido | Uso |
@@ -246,6 +257,7 @@ Si se cambia el puerto de cualquiera de las aplicaciones, actualiza también `CO
 | --- | --- | --- |
 | CREATOR | `creator@adidas.com` | `password123` |
 | APPROVER | `approver@adidas.com` | `password123` |
+| ADMIN | `admin@adidas.com` | `password123` |
 
 La semilla también crea lanzamientos de ejemplo en diferentes mercados y estados para probar filtros, permisos y calendario. Estas credenciales son exclusivamente para desarrollo local.
 
@@ -296,26 +308,18 @@ por lo que nunca modifican la base local `backend/prisma/dev.db`.
 
 El JWT simple, las credenciales semilla y SQLite están pensados para esta primera etapa local. Antes de desplegar se deben usar secretos administrados, HTTPS, una política de contraseñas, rate limiting, validación más estricta de entradas y una base de datos apropiada para el entorno.
 
-## Staging reproducible
+## Alcance local y límites
 
-El repositorio incluye una imagen única que compila React y lo sirve junto con la API Express. La base SQLite vive en un volumen persistente independiente del contenedor.
+Esta versión se ejecuta únicamente en desarrollo local, con el frontend y la API en procesos separados. No incluye configuración de hosting, contenedores ni ambientes de staging.
 
-Con Docker instalado, crea un archivo local de configuración y levanta staging:
+Para mantener el alcance cerca del reto planteado:
 
-```powershell
-Copy-Item .env.staging.example .env.staging
-# Reemplaza STAGING_JWT_SECRET por un secreto aleatorio de al menos 32 caracteres.
-docker compose --env-file .env.staging -f compose.staging.yml up --build -d
-```
+- Solo existen los roles `CREATOR`, `APPROVER` y `ADMIN`.
+- Los assets se asocian mediante enlaces HTTP/HTTPS; no se almacenan archivos.
+- Cada lanzamiento admite hasta 10 assets.
+- Los nombres admiten 120 caracteres, la descripción 2.000 y el mercado 80.
+- Los tipos de asset se limitan a imagen, video, documento, copy u otro.
+- La administración se limita a asignar roles a cuentas existentes; no incluye creación, eliminación ni permisos granulares.
+- No se incluyen notificaciones ni integraciones externas.
 
-La aplicación queda en `http://localhost:4000` y su comprobación de salud en `http://localhost:4000/api/health`. Para detenerla sin eliminar sus datos:
-
-```powershell
-docker compose --env-file .env.staging -f compose.staging.yml down
-```
-
-En cada pull request y push a `main`, GitHub Actions ejecuta pruebas, lint, build y E2E. Después de un push válido a `main`, publica `ghcr.io/elviejoh/adidas-launch-panel:staging`. Si el repositorio tiene configurado el secreto `STAGING_DEPLOY_HOOK_URL`, también solicita el despliegue al proveedor conectado.
-
-Consulta [la guía de despliegue](docs/deployment.md) para configurar un host remoto, persistencia, variables y rollback.
-
-Para crear el staging recomendado directamente en Render, usa el [Blueprint del proyecto](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FElViejoH%2FAdidas_LaunchPanel). La configuración utiliza un servicio `starter` con un disco persistente de 1 GB.
+GitHub Actions se conserva únicamente como verificación de pruebas, lint y build; no publica ni despliega la aplicación.

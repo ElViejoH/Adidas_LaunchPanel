@@ -1,6 +1,7 @@
 import { ArrowRight, PencilSimple, Trash } from '@phosphor-icons/react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useI18n } from '../hooks/useI18n'
 import { formatLaunchDate } from '../utils/date'
 import { canDeleteLaunch, canEditLaunch } from '../utils/permissions'
 import { buttonStyles } from './buttonStyles'
@@ -8,6 +9,7 @@ import { StatusBadge } from './StatusBadge'
 
 export function LaunchTable({ launches, onDelete }) {
   const { user } = useAuth()
+  const { language, t } = useI18n()
 
   return (
     <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
@@ -15,11 +17,11 @@ export function LaunchTable({ launches, onDelete }) {
         <table className="w-full min-w-[760px] border-collapse text-left">
           <thead className="bg-zinc-50 text-[11px] font-extrabold uppercase tracking-[0.1em] text-zinc-500">
             <tr>
-              <th className="px-4 py-3">Lanzamiento</th>
-              <th className="px-4 py-3">Mercado</th>
-              <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3 text-right">Acciones</th>
+              <th className="px-4 py-3">{t('launch.table.launch')}</th>
+              <th className="px-4 py-3">{t('launch.table.market')}</th>
+              <th className="px-4 py-3">{t('launch.table.date')}</th>
+              <th className="px-4 py-3">{t('launch.table.status')}</th>
+              <th className="px-4 py-3 text-right">{t('launch.table.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -36,11 +38,11 @@ export function LaunchTable({ launches, onDelete }) {
                       {launch.name}
                     </Link>
                     <span className="mt-0.5 block truncate text-xs text-zinc-500">
-                      {launch.creator?.name || 'Equipo de lanzamiento'}
+                      {launch.creator?.name || t('launch.teamFallback')}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 font-semibold">{launch.market || 'Sin mercado'}</td>
-                  <td className="px-4 py-3.5 font-semibold capitalize">{formatLaunchDate(launch.launchDate)}</td>
+                  <td className="px-4 py-3.5 font-semibold">{launch.market || t('launch.emptyMarket')}</td>
+                  <td className="px-4 py-3.5 font-semibold capitalize">{formatLaunchDate(launch.launchDate, language)}</td>
                   <td className="px-4 py-3.5">
                     <StatusBadge status={launch.status} compact />
                   </td>
@@ -50,7 +52,7 @@ export function LaunchTable({ launches, onDelete }) {
                         <Link
                           to={`/launches/${launch.id}/edit`}
                           className={buttonStyles({ variant: 'ghost', size: 'icon', className: 'size-9' })}
-                          aria-label={`Editar ${launch.name}`}
+                          aria-label={t('launch.actions.editAria', { name: launch.name })}
                         >
                           <PencilSimple size={17} weight="bold" />
                         </Link>
@@ -60,7 +62,7 @@ export function LaunchTable({ launches, onDelete }) {
                           type="button"
                           onClick={() => onDelete(launch)}
                           className={buttonStyles({ variant: 'dangerGhost', size: 'icon', className: 'size-9' })}
-                          aria-label={`Eliminar ${launch.name}`}
+                          aria-label={t('launch.actions.deleteAria', { name: launch.name })}
                         >
                           <Trash size={17} weight="bold" />
                         </button>
@@ -68,7 +70,7 @@ export function LaunchTable({ launches, onDelete }) {
                       <Link
                         to={`/launches/${launch.id}`}
                         className={buttonStyles({ variant: 'ghost', size: 'icon', className: 'size-9' })}
-                        aria-label={`Ver ${launch.name}`}
+                        aria-label={t('launch.actions.viewAria', { name: launch.name })}
                       >
                         <ArrowRight size={17} weight="bold" />
                       </Link>
