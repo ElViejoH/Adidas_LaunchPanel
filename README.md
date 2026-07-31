@@ -18,7 +18,7 @@ Adidas Launch Panel brings that process into one workspace with four primary goa
 ## Documentation
 
 - [Figma design and low-fidelity wireframes](https://www.figma.com/design/IyfRvjFwQeB0jIIUews6b5/Sin-t%C3%ADtulo?node-id=0-1&t=HWcsQJqKwZ2tpqZ3-1): login, desktop dashboard, and responsive mobile layout explorations.
-- [Youtube video- presentation] (https://youtu.be/sExVU5YLPLY)
+- [Youtube video- presentation](https://youtu.be/sExVU5YLPLY):
 
 ### Target users
 
